@@ -1,0 +1,17 @@
+Files and schema choices
+
+1) openai.csv
+   One row per priced OpenAI model/mode/context/modality slice.
+   Why: OpenAI's official pricing mixes context bands, modalities, per-minute estimates, per-second video pricing,
+   and fine-tuning training-hour pricing, so a row-oriented schema is the least lossy.
+
+2) anthropic.csv
+   One row per Anthropic model with separate standard prompt-caching columns and batch columns.
+   Why: Anthropic's pricing is naturally model-centric and explicitly splits standard base input, cache write/read,
+   and batch pricing.
+
+3) google.csv
+   One row per Google model and pricing mode.
+   Why: Google's Gemini pricing varies by paid mode, modality, prompt-size band, and sometimes image/video/request units.
+   The schema keeps the main token prices in columns and preserves extra pricing details in the
+   context_cache_storage_or_other_usd and notes columns.

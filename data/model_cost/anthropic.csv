@@ -1,0 +1,14 @@
+provider,family,model_name,model_id,status,standard_base_input_usd_per_mtok,standard_cache_write_5m_usd_per_mtok,standard_cache_write_1h_usd_per_mtok,standard_cache_read_usd_per_mtok,standard_output_usd_per_mtok,batch_input_usd_per_mtok,batch_output_usd_per_mtok,thinking_mode,notes,source_url
+Anthropic,Haiku,Claude Haiku 3,claude-3-haiku,current,0.25,0.3,0.5,0.03,1.25,,,unknown,,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Haiku,Claude Haiku 3.5,claude-3-5-haiku,current,0.8,1.0,1.6,0.08,4.0,,,unknown,no batch pricing listed in excerpt,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Haiku,Claude Haiku 4.5,claude-haiku-4-5,current,1.0,1.25,2.0,0.1,5.0,0.5,2.5,extended,Models overview indicates extended thinking but no adaptive thinking.,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Opus,Claude Opus 3,claude-3-opus,deprecated,15.0,18.75,30.0,1.5,75.0,,,unknown,Explicitly marked deprecated on pricing page.,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Opus,Claude Opus 4,claude-opus-4,current,15.0,18.75,30.0,1.5,75.0,7.5,37.5,unknown,deprecated,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Opus,Claude Opus 4.1,claude-opus-4-1,current,15.0,18.75,30.0,1.5,75.0,7.5,37.5,unknown,,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Opus,Claude Opus 4.5,claude-opus-4-5,current,5.0,6.25,10.0,0.5,25.0,2.5,12.5,unknown,,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Opus,Claude Opus 4.6,claude-opus-4-6,current,5.0,6.25,10.0,0.5,25.0,2.5,12.5,adaptive,Models overview indicates adaptive thinking; pricing page also lists batch pricing.,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Opus,Claude Opus 4.7,claude-opus-4-7,current,5.0,6.25,10.0,0.5,25.0,2.5,12.5,adaptive,Current latest Opus; pricing page plus models overview indicate adaptive thinking and 1M context.,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Sonnet,Claude Sonnet 3.7,claude-3-7-sonnet,deprecated,3.0,3.75,6.0,0.3,15.0,1.5,7.5,unknown,Explicitly marked deprecated on pricing page.,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Sonnet,Claude Sonnet 4,claude-sonnet-4,current,3.0,3.75,6.0,0.3,15.0,1.5,7.5,unknown,,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Sonnet,Claude Sonnet 4.5,claude-sonnet-4-5,current,3.0,3.75,6.0,0.3,15.0,1.5,7.5,unknown,,https://platform.claude.com/docs/en/about-claude/pricing
+Anthropic,Sonnet,Claude Sonnet 4.6,claude-sonnet-4-6,current,3.0,3.75,6.0,0.3,15.0,1.5,7.5,extended+adaptive,Models overview indicates both extended and adaptive thinking; pricing page also lists batch pricing.,https://platform.claude.com/docs/en/about-claude/pricing
