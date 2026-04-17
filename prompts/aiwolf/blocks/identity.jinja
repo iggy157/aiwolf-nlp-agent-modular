@@ -1,0 +1,12 @@
+{#-
+  identity.jinja
+  サーバから送られてくるキャラクター情報を表示する.
+  現プロトコルの Info は自由記述の profile (名前・年齢・性別・プロフィール等を含む想定)
+  を持つ. 役職は Role enum として別途渡される.
+  Expects: info, role
+-#}
+あなたの名前: {{ info.agent }}
+あなたの役職: {{ role.value }}
+{% if info.profile is not none -%}
+あなたのプロフィール: {{ info.profile }}
+{% endif -%}

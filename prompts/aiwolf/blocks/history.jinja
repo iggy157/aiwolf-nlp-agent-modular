@@ -1,0 +1,13 @@
+{#-
+  history.jinja
+  トーク/囁き履歴をループ表示する.
+  呼び出し側で以下を {% set %} してから {% include %} すると挙動を切り替えられる:
+    - history_source: 対象の履歴 list (既定: talk_history)
+    - history_start: スライス開始位置 (既定: 0 — single-turnではフル, multi-turnでは sent_* 用途)
+  Expects: talk_history (デフォルト履歴として)
+-#}
+{% set _source = history_source if history_source is defined else talk_history -%}
+{% set _start = history_start if history_start is defined else 0 -%}
+{% for w in _source[_start:] -%}
+{{ w.agent }}: {{ w.text }}
+{% endfor -%}

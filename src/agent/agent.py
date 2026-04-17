@@ -13,7 +13,7 @@ from time import sleep
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 from dotenv import load_dotenv
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
@@ -40,6 +40,15 @@ T = TypeVar("T")
 _TALK_REQUESTS = {Request.TALK, Request.WHISPER}
 _ACTION_REQUESTS = {Request.VOTE, Request.DIVINE, Request.GUARD, Request.ATTACK}
 _SHARED_REQUESTS = {Request.INITIALIZE, Request.DAILY_INITIALIZE, Request.DAILY_FINISH}
+
+_BLOCKS_DIR = Path(__file__).parent.joinpath("./../../prompts/aiwolf/blocks").resolve()
+_JINJA_ENV = Environment(
+    loader=FileSystemLoader(str(_BLOCKS_DIR)),
+    autoescape=select_autoescape(enabled_extensions=(), default=False),
+    trim_blocks=False,
+    lstrip_blocks=False,
+    keep_trailing_newline=False,
+)
 
 
 class Agent:
@@ -326,9 +335,10 @@ class Agent:
         # single-turn では共通リクエストはLLMに送らず, day_events等としてコンテキスト保持のみ行う.
         if is_single_turn and request in _SHARED_REQUESTS:
             return None
-        if request.lower() not in self.config["prompt"]:
+        request_key = request.lower()
+        if request_key not in self.config["prompt"]:
             return None
-        prompt = self.config["prompt"][request.lower()]
+        prompt = self.config["prompt"][request_key]
         if float(self.config["llm"]["sleep_time"]) > 0:
             sleep(float(self.config["llm"]["sleep_time"]))
         key = {
@@ -341,8 +351,9 @@ class Agent:
             "sent_whisper_count": self.sent_whisper_count,
             "day_events": self.day_events,
             "mode": self.config.get("mode", "multi_turn"),
+            "request_key": request_key,
         }
-        template: Template = Template(prompt)
+        template = _JINJA_ENV.from_string(prompt)
         prompt = template.render(**key).strip()
         targets = self._resolve_targets(request)
         if not targets:

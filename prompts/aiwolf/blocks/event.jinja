@@ -1,0 +1,38 @@
+{#-
+  event.jinja
+  daily_initialize / daily_finish で送られてくるイベント情報一覧.
+  - day_events が存在すれば (single-turnでの蓄積スナップショット) それを列挙.
+  - なければ (multi-turn) 現在の info から当日の情報を表示.
+  Expects: info, (optional) day_events
+-#}
+{% if day_events is defined and day_events -%}
+{% for e in day_events -%}
+Day {{ e.day }} ({{ e.phase }})
+{% if e.medium_result is not none %}  霊能結果: {{ e.medium_result }}
+{% endif -%}
+{% if e.divine_result is not none %}  占い結果: {{ e.divine_result }}
+{% endif -%}
+{% if e.executed_agent is not none %}  追放結果: {{ e.executed_agent }}
+{% endif -%}
+{% if e.attacked_agent is not none %}  襲撃結果: {{ e.attacked_agent }}
+{% endif -%}
+{% if e.vote_list is not none %}  投票結果: {{ e.vote_list }}
+{% endif -%}
+{% if e.attack_vote_list is not none %}  襲撃投票結果: {{ e.attack_vote_list }}
+{% endif -%}
+{% endfor -%}
+{% elif info is not none -%}
+Day {{ info.day }}
+{% if info.medium_result is not none %}霊能結果: {{ info.medium_result }}
+{% endif -%}
+{% if info.divine_result is not none %}占い結果: {{ info.divine_result }}
+{% endif -%}
+{% if info.executed_agent is not none %}追放結果: {{ info.executed_agent }}
+{% endif -%}
+{% if info.attacked_agent is not none %}襲撃結果: {{ info.attacked_agent }}
+{% endif -%}
+{% if info.vote_list is not none %}投票結果: {{ info.vote_list }}
+{% endif -%}
+{% if info.attack_vote_list is not none %}襲撃投票結果: {{ info.attack_vote_list }}
+{% endif -%}
+{% endif -%}

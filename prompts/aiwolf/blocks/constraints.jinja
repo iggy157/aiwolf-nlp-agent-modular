@@ -1,0 +1,23 @@
+{#-
+  constraints.jinja
+  文字数制限 (サーバの setting から動的に取得) と出力形式 (request_keyに応じて) を表示.
+  Expects: request_key, setting (optional)
+  setting は aiwolf_nlp_common.packet.Setting を想定:
+    - setting.talk.max_length.per_talk / per_agent / base_length
+    - setting.whisper.max_length.per_talk / per_agent / base_length
+-#}
+{% if request_key == 'talk' -%}
+{% if setting is not none and setting.talk is not none and setting.talk.max_length is not none and setting.talk.max_length.per_talk is not none -%}
+1発言あたり最大 {{ setting.talk.max_length.per_talk }} 文字以内で出力してください。
+{% endif -%}
+発言内容のみを出力してください。説明やメタ情報、前置きは含めないでください。
+これ以上発言することがない場合は「Over」と出力してください。
+{% elif request_key == 'whisper' -%}
+{% if setting is not none and setting.whisper is not none and setting.whisper.max_length is not none and setting.whisper.max_length.per_talk is not none -%}
+1発言あたり最大 {{ setting.whisper.max_length.per_talk }} 文字以内で出力してください。
+{% endif -%}
+囁き内容のみを出力してください。説明やメタ情報、前置きは含めないでください。
+これ以上囁くことがない場合は「Over」と出力してください。
+{% elif request_key in ['divine', 'guard', 'vote', 'attack'] -%}
+対象エージェント名のみを出力してください。説明・理由・記号・接頭辞は一切含めないでください。
+{% endif -%}

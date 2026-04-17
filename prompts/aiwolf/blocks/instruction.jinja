@@ -1,0 +1,24 @@
+{#-
+  instruction.jinja
+  リクエスト種別ごとの最低限の指示文.
+  Expects: request_key, info (optional)
+-#}
+{% if request_key == 'talk' -%}
+現在 {{ info.day }}日目のトークリクエストです。ゲーム内で発言すべき内容を出力してください。
+{% elif request_key == 'whisper' -%}
+現在 {{ info.day }}日目の囁きリクエストです。人狼仲間に対する囁きの内容を出力してください。
+{% elif request_key == 'divine' -%}
+占いリクエストです。占い対象のエージェント名のみを出力してください。
+{% elif request_key == 'guard' -%}
+護衛リクエストです。護衛対象のエージェント名のみを出力してください。
+{% elif request_key == 'vote' -%}
+投票リクエストです。追放投票の対象エージェント名のみを出力してください。
+{% elif request_key == 'attack' -%}
+襲撃リクエストです。襲撃対象のエージェント名のみを出力してください。
+{% elif request_key == 'initialize' -%}
+ゲーム開始リクエストです。以降のリクエストに対し日本語で適切に応答してください。
+{% elif request_key == 'daily_initialize' -%}
+{{ info.day }}日目が始まりました。
+{% elif request_key == 'daily_finish' -%}
+{{ info.day }}日目が終了しました。
+{% endif -%}
