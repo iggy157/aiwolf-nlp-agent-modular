@@ -6,7 +6,7 @@
 
 - **multi-turn / single-turn モード** を config で切替
 - **LangChain 分離**: 発話系（talk/whisper）とアクション系（vote/divine/guard/attack）で別モデル・別 `llm_message_history` を使用可能
-- **プロンプトブロック**: `prompts/*.jinja` を `{% include %}` で再利用
+- **プロンプトブロック**: `prompts/{jp,en}/*.jinja` を `{% include %}` で再利用（日英切替は config の `lang`）
 - **コストトレース**: 呼び出しごとに `log/<game>/cost_summary.{json,md}` をリアルタイム生成
 
 ## 目次
@@ -110,7 +110,7 @@ llm:
 
 ## プロンプトブロック
 
-`prompts/` 配下に 5 つの再利用可能 Jinja2 ブロックがあります。config の `prompt.<request>` から `{% include %}` で参照してください。
+`prompts/jp/` と `prompts/en/` の配下にそれぞれ 5 つの再利用可能 Jinja2 ブロックがあります。`config.main.yml` の `lang: jp` / `lang: en` で参照先を切替えます。config の `prompt.<request>` から `{% include %}` で参照してください。
 
 | ブロック | 役割 | 主な変数 |
 |---|---|---|
@@ -130,7 +130,7 @@ llm:
 {% include 'constraints.jinja' %}
 ```
 
-現状ブロックは日本語のみ。英語ブロックは未実装のため、`.en.yml` 系では既存のインラインプロンプトを維持しています。
+jp / en の両言語のブロックと config が揃っています。新しい言語を追加する場合は `prompts/<lang>/` と `config/config.<mode>.<lang>.yml.example` の両方を用意し、`config.main.yml` の `lang` を書き換えてください。
 
 ## コストトレース
 
@@ -165,7 +165,7 @@ log/20260418033529578/
 
 | Script | 説明 |
 |---|---|
-| `scripts/preview_prompt.py` | `data/sample_packet.yml` を読み、jp 版 multi_turn / single_turn の全リクエストをレンダリングして `preview.md` に上書き出力 |
+| `scripts/preview_prompt.py` | `data/sample_packet.yml` を読み、jp × {multi_turn, single_turn} + en × {multi_turn, single_turn} の計4ターゲット全リクエストをレンダリングして `preview.md` に上書き出力 |
 | `scripts/generate_models_md.py` | `data/model_cost/*.csv` から `data/models.md`（使用可能モデル一覧と料金）を生成 |
 
 実行:
@@ -192,7 +192,9 @@ aiwolf-jsai-agent/
 │   ├── model_cost/               # プロバイダ別料金 CSV
 │   ├── models.md                 # 自動生成されたモデル一覧
 │   └── sample_packet.yml         # preview 用サンプル
-├── prompts/                      # Jinja2 ブロック (5ファイル)
+├── prompts/
+│   ├── jp/                       # Jinja2 ブロック 日本語 (5ファイル)
+│   └── en/                       # Jinja2 ブロック 英語 (5ファイル)
 ├── scripts/                      # ユーティリティスクリプト
 ├── src/
 │   ├── agent/                    # Agent 実装 (役職別含む)

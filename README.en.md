@@ -6,7 +6,7 @@ LLM agent for the AIWolf Competition (Natural Language Division) — JSAI 2026 e
 
 - **multi-turn / single-turn modes** switchable via config
 - **Split LangChain**: use separate models and separate `llm_message_history` for talk-group (talk/whisper) vs action-group (vote/divine/guard/attack) requests
-- **Prompt blocks**: reusable Jinja2 fragments under `prompts/` composed with `{% include %}`
+- **Prompt blocks**: reusable Jinja2 fragments under `prompts/{jp,en}/` composed with `{% include %}` (switch via config's `lang`)
 - **Cost tracking**: per-call USD cost written to `log/<game>/cost_summary.{json,md}` in real time
 
 ## Contents
@@ -110,7 +110,7 @@ llm:
 
 ## Prompt blocks
 
-Five reusable Jinja2 blocks live under `prompts/`. Reference them from `prompt.<request>` in config via `{% include %}`.
+Five reusable Jinja2 blocks live under `prompts/jp/` and `prompts/en/` respectively. The `lang: jp` / `lang: en` field in `config.main.yml` selects which directory to load. Reference the blocks from `prompt.<request>` via `{% include %}`.
 
 | Block | Purpose | Key variables |
 |---|---|---|
@@ -130,7 +130,7 @@ Usage:
 {% include 'constraints.jinja' %}
 ```
 
-Blocks are currently Japanese-only. The English config examples keep prompts inline until English blocks are added.
+Both jp and en blocks + configs ship out of the box. To add another language, create `prompts/<lang>/` with the same 5 files and `config/config.<mode>.<lang>.yml.example`, then set `lang: <lang>` in `config.main.yml`.
 
 ## Cost tracking
 
@@ -165,7 +165,7 @@ After adding rows to a provider CSV, regenerate the reference table with `uv run
 
 | Script | Purpose |
 |---|---|
-| `scripts/preview_prompt.py` | Read `data/sample_packet.yml` and render every request for both multi_turn and single_turn (jp variant) into `preview.md` |
+| `scripts/preview_prompt.py` | Read `data/sample_packet.yml` and render all requests for 4 targets (jp × {multi_turn, single_turn} + en × {multi_turn, single_turn}) into `preview.md` |
 | `scripts/generate_models_md.py` | Build `data/models.md` (the human-readable model / pricing reference) from `data/model_cost/*.csv` |
 
 Run:
@@ -192,7 +192,9 @@ aiwolf-jsai-agent/
 │   ├── model_cost/               # Per-provider pricing CSVs
 │   ├── models.md                 # Generated model reference
 │   └── sample_packet.yml         # Sample for preview
-├── prompts/                      # Jinja2 blocks (5 files)
+├── prompts/
+│   ├── jp/                       # Japanese Jinja2 blocks (5 files)
+│   └── en/                       # English Jinja2 blocks (5 files)
 ├── scripts/                      # Utility scripts
 ├── src/
 │   ├── agent/                    # Agent base + role subclasses
