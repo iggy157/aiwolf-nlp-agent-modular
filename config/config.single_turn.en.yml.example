@@ -2,9 +2,10 @@
 # Contains LLM provider / model / prompt definitions.
 # Loaded when the main config's `mode` is set to `single_turn`.
 #
-# NOTE: Step 3 will add the single-turn runtime (no llm_message_history; embed
-# initialize/daily_initialize/daily_finish context and the full talk_history into
-# every prompt body). For now this file is a skeleton.
+# In single-turn mode, initialize / daily_initialize / daily_finish are NOT sent to the LLM.
+# Their payloads are snapshotted inside the agent (as day_events) and injected into every prompt
+# below via the event.jinja block.
+# Each prompt includes the 5 blocks (identity / event / history / instruction / constraints).
 
 llm:
   type: google
@@ -36,139 +37,102 @@ claude:
   model: claude-opus-4-5-20251101
   temperature: 1.0
 
-# NOTE: In single-turn mode, initialize / daily_initialize / daily_finish are NOT sent to the LLM.
-# Their information is retained inside the agent (as day_events) and injected into the prompts below.
-# Prompt definitions for the initialize-series are therefore unnecessary.
-#
-# The block-based prompt templates under prompts/ are currently in Japanese, so this
-# English example keeps the prompts inline and does not use `{% include %}` until
-# English-language blocks are added. See the .jp.yml counterpart for the block-reference format.
 prompt:
   talk: |-
-    You are a werewolf game agent.
-    Your name: {{ info.agent }}
-    Your role: {{ role.value }}
-    {% if info.profile is not none -%}
-    Profile: {{ info.profile }}
-    {%- endif %}
+    {% include 'identity.jinja' %}
 
-    Past daily events:
-    {% for e in day_events -%}
-    Day {{ e.day }} ({{ e.phase }})
-    {% if e.medium_result is not none %}  Medium result: {{ e.medium_result }}{% endif %}
-    {% if e.divine_result is not none %}  Divine result: {{ e.divine_result }}{% endif %}
-    {% if e.executed_agent is not none %}  Execution: {{ e.executed_agent }}{% endif %}
-    {% if e.attacked_agent is not none %}  Attack: {{ e.attacked_agent }}{% endif %}
-    {% if e.vote_list is not none %}  Votes: {{ e.vote_list }}{% endif %}
-    {% if e.attack_vote_list is not none %}  Attack votes: {{ e.attack_vote_list }}{% endif %}
-    {% endfor %}
+    # Daily events
+    {% include 'event.jinja' %}
 
-    Talk history:
-    {% for w in talk_history -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
+    # Talk history
+    {% set history_source = talk_history -%}
+    {% set history_start = 0 -%}
+    {% include 'history.jinja' %}
 
-    This is a talk request on day {{ info.day }}. Speak now.
-    Output "Over" to end your turn. Your response is sent directly to the game.
+    {% include 'instruction.jinja' %}
+    {% include 'constraints.jinja' %}
   whisper: |-
-    You are a werewolf game agent.
-    Your name: {{ info.agent }}
-    Your role: {{ role.value }}
-    {% if info.profile is not none -%}
-    Profile: {{ info.profile }}
-    {%- endif %}
+    {% include 'identity.jinja' %}
 
-    Past daily events:
-    {% for e in day_events -%}
-    Day {{ e.day }} ({{ e.phase }})
-    {% if e.medium_result is not none %}  Medium result: {{ e.medium_result }}{% endif %}
-    {% if e.divine_result is not none %}  Divine result: {{ e.divine_result }}{% endif %}
-    {% if e.executed_agent is not none %}  Execution: {{ e.executed_agent }}{% endif %}
-    {% if e.attacked_agent is not none %}  Attack: {{ e.attacked_agent }}{% endif %}
-    {% endfor %}
+    # Daily events
+    {% include 'event.jinja' %}
 
-    Whisper history:
-    {% for w in whisper_history -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
+    # Whisper history
+    {% set history_source = whisper_history -%}
+    {% set history_start = 0 -%}
+    {% include 'history.jinja' %}
 
-    This is a whisper request on day {{ info.day }}. Speak now.
-    Output "Over" to end your turn. Your response is sent directly to the game.
+    {% include 'instruction.jinja' %}
+    {% include 'constraints.jinja' %}
   divine: |-
-    You are the seer ({{ info.agent }}) in a werewolf game.
-    Past daily events:
-    {% for e in day_events -%}
-    Day {{ e.day }} ({{ e.phase }})
-    {% if e.executed_agent is not none %}  Execution: {{ e.executed_agent }}{% endif %}
-    {% if e.attacked_agent is not none %}  Attack: {{ e.attacked_agent }}{% endif %}
-    {% if e.divine_result is not none %}  Divine result: {{ e.divine_result }}{% endif %}
-    {% endfor %}
+    {% include 'identity.jinja' %}
 
-    Talk history:
-    {% for w in talk_history -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
+    # Daily events
+    {% include 'event.jinja' %}
 
-    Output only the name of one agent to divine, chosen from:
+    # Talk history
+    {% set history_source = talk_history -%}
+    {% set history_start = 0 -%}
+    {% include 'history.jinja' %}
+
+    {% include 'instruction.jinja' %}
+    Targets:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
+    {% include 'constraints.jinja' %}
   guard: |-
-    You are the bodyguard ({{ info.agent }}) in a werewolf game.
-    Past daily events:
-    {% for e in day_events -%}
-    Day {{ e.day }} ({{ e.phase }})
-    {% if e.executed_agent is not none %}  Execution: {{ e.executed_agent }}{% endif %}
-    {% if e.attacked_agent is not none %}  Attack: {{ e.attacked_agent }}{% endif %}
-    {% endfor %}
+    {% include 'identity.jinja' %}
 
-    Talk history:
-    {% for w in talk_history -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
+    # Daily events
+    {% include 'event.jinja' %}
 
-    Output only the name of one agent to guard, chosen from:
+    # Talk history
+    {% set history_source = talk_history -%}
+    {% set history_start = 0 -%}
+    {% include 'history.jinja' %}
+
+    {% include 'instruction.jinja' %}
+    Targets:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
+    {% include 'constraints.jinja' %}
   vote: |-
-    You are an agent ({{ info.agent }}, role: {{ role.value }}) in a werewolf game.
-    Past daily events:
-    {% for e in day_events -%}
-    Day {{ e.day }} ({{ e.phase }})
-    {% if e.executed_agent is not none %}  Execution: {{ e.executed_agent }}{% endif %}
-    {% if e.attacked_agent is not none %}  Attack: {{ e.attacked_agent }}{% endif %}
-    {% if e.vote_list is not none %}  Votes: {{ e.vote_list }}{% endif %}
-    {% endfor %}
+    {% include 'identity.jinja' %}
 
-    Talk history:
-    {% for w in talk_history -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
+    # Daily events
+    {% include 'event.jinja' %}
 
-    Output only the name of one agent to vote for, chosen from:
+    # Talk history
+    {% set history_source = talk_history -%}
+    {% set history_start = 0 -%}
+    {% include 'history.jinja' %}
+
+    {% include 'instruction.jinja' %}
+    Targets:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
+    {% include 'constraints.jinja' %}
   attack: |-
-    You are a werewolf ({{ info.agent }}) in a werewolf game.
-    Past daily events:
-    {% for e in day_events -%}
-    Day {{ e.day }} ({{ e.phase }})
-    {% if e.executed_agent is not none %}  Execution: {{ e.executed_agent }}{% endif %}
-    {% if e.attacked_agent is not none %}  Attack: {{ e.attacked_agent }}{% endif %}
-    {% endfor %}
+    {% include 'identity.jinja' %}
 
-    Whisper history:
-    {% for w in whisper_history -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
+    # Daily events
+    {% include 'event.jinja' %}
 
-    Output only the name of one agent to attack, chosen from:
+    # Whisper history
+    {% set history_source = whisper_history -%}
+    {% set history_start = 0 -%}
+    {% include 'history.jinja' %}
+
+    {% include 'instruction.jinja' %}
+    Targets:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
+    {% include 'constraints.jinja' %}

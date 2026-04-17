@@ -4,6 +4,8 @@
 # このファイルとマージされる. キー衝突時は子configの値が優先される.
 
 mode: multi_turn
+# プロンプトブロック (prompts/<lang>/) の言語. jp / en.
+lang: jp
 
 configs:
   multi_turn: ./config.multi_turn.jp.yml

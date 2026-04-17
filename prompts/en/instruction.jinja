@@ -1,0 +1,24 @@
+{#-
+  instruction.jinja (English)
+  Minimal per-request instruction line.
+  Expects: request_key, info (optional)
+-#}
+{% if request_key == 'talk' -%}
+This is a talk request on day {{ info.day }}. Output what you should say in the game.
+{% elif request_key == 'whisper' -%}
+This is a whisper request on day {{ info.day }}. Output your whisper to fellow werewolves.
+{% elif request_key == 'divine' -%}
+Divine request. Output only the name of the agent to divine.
+{% elif request_key == 'guard' -%}
+Guard request. Output only the name of the agent to guard.
+{% elif request_key == 'vote' -%}
+Vote request. Output only the name of the agent to vote for.
+{% elif request_key == 'attack' -%}
+Attack request. Output only the name of the agent to attack.
+{% elif request_key == 'initialize' -%}
+Game initialize request. Respond appropriately in English to subsequent requests.
+{% elif request_key == 'daily_initialize' -%}
+Day {{ info.day }} has started.
+{% elif request_key == 'daily_finish' -%}
+Day {{ info.day }} has ended.
+{% endif -%}

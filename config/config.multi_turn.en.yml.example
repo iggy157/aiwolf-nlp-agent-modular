@@ -2,10 +2,10 @@
 # Contains LLM provider / model / prompt definitions.
 # Loaded when the main config's `mode` is set to `multi_turn`.
 #
-# NOTE: The block-based prompt templates under prompts/ are currently
-# written in Japanese. This English example keeps the prompts inline and does not
-# use `{% include %}` until English-language blocks are added. See the .jp.yml
-# counterpart for the block-reference format.
+# Prompts use {% include 'X.jinja' %} to reference blocks under prompts/<lang>/.
+# When llm.separate_langchain=true, the shared requests (initialize / daily_initialize /
+# daily_finish) include identity / event blocks so both talk and action LangChains
+# receive the minimum shared context.
 
 llm:
   type: google
@@ -44,111 +44,59 @@ claude:
 
 prompt:
   initialize: |-
-    You are a werewolf game agent.
-    Your name is {{ info.agent }}.
-    Your role is {{ role.value }}.
-
-    The game will now proceed. When you receive a request, please return an appropriate response in English.
-
-    For talk requests and whisper requests, output only the content that should be spoken in the game.
-    If there is a history, refer to it. If there isn't, output appropriate content.
-    When you want to end your talk because you think you can't get any more information, output "Over".
-
-    For other requests, output only the name of the agent that is the target of the action.
-    A list of surviving agents that can be targeted is provided.
-
-    {% if info.profile is not none -%}
-    Your profile: {{ info.profile }}
-    {%- endif %}
-
-    Your response will be sent directly to the game, so do not include unnecessary information.
+    {% include 'identity.jinja' %}
+    {% include 'instruction.jinja' %}
+    Respond in English to subsequent requests. Your response is sent directly to the game; do not include unnecessary content.
   daily_initialize: |-
-    Day start request
-    Day {{ info.day }}
-    {% if info.medium_result is not none -%}
-    Medium result: {{ info.medium_result }}
-    {%- endif %}
-    {% if info.divine_result is not none -%}
-    Divine result: {{ info.divine_result }}
-    {%- endif %}
-    {% if info.executed_agent is not none -%}
-    Execution result: {{ info.executed_agent }}
-    {%- endif %}
-    {% if info.attacked_agent is not none -%}
-    Attack result: {{ info.attacked_agent }}
-    {%- endif %}
-    {% if info.vote_list is not none -%}
-    Vote result: {{ info.vote_list }}
-    {%- endif %}
-    {% if info.attack_vote_list is not none -%}
-    Attack vote result: {{ info.attack_vote_list }}
-    {%- endif %}
-  whisper: |-
-    Whisper request
-    History:
-    {% for w in whisper_history[sent_whisper_count:] -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
-  talk: |-
-    Talk request
-    History:
-    {% for w in talk_history[sent_talk_count:] -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
+    {% include 'instruction.jinja' %}
+    {% include 'event.jinja' %}
   daily_finish: |-
-    Day end request
-    History:
-    {% for w in talk_history[sent_talk_count:] -%}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
-    Day {{ info.day }}
-    {% if info.medium_result is not none -%}
-    Medium result: {{ info.medium_result }}
-    {%- endif %}
-    {% if info.divine_result is not none -%}
-    Divine result: {{ info.divine_result }}
-    {%- endif %}
-    {% if info.executed_agent is not none -%}
-    Execution result: {{ info.executed_agent }}
-    {%- endif %}
-    {% if info.attacked_agent is not none -%}
-    Attack result: {{ info.attacked_agent }}
-    {%- endif %}
-    {% if info.vote_list is not none -%}
-    Vote result: {{ info.vote_list }}
-    {%- endif %}
-    {% if info.attack_vote_list is not none -%}
-    Attack vote result: {{ info.attack_vote_list }}
-    {%- endif %}
+    {% include 'instruction.jinja' %}
+    {% include 'event.jinja' %}
+    {% set history_source = talk_history -%}
+    {% set history_start = sent_talk_count -%}
+    {% include 'history.jinja' %}
+  talk: |-
+    {% set history_source = talk_history -%}
+    {% set history_start = sent_talk_count -%}
+    {% include 'history.jinja' %}
+    {% include 'instruction.jinja' %}
+    {% include 'constraints.jinja' %}
+  whisper: |-
+    {% set history_source = whisper_history -%}
+    {% set history_start = sent_whisper_count -%}
+    {% include 'history.jinja' %}
+    {% include 'instruction.jinja' %}
+    {% include 'constraints.jinja' %}
   divine: |-
-    Divine request
+    {% include 'instruction.jinja' %}
     Targets:
     {% for k, v in info.status_map.items() -%}
-    {%- if v == 'ALIVE' -%}
-    {{ k }}
+    {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
+    {% include 'constraints.jinja' %}
   guard: |-
-    Guard request
+    {% include 'instruction.jinja' %}
     Targets:
     {% for k, v in info.status_map.items() -%}
-    {%- if v == 'ALIVE' -%}
-    {{ k }}
+    {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
+    {% include 'constraints.jinja' %}
   vote: |-
-    Vote request
+    {% include 'instruction.jinja' %}
     Targets:
     {% for k, v in info.status_map.items() -%}
-    {%- if v == 'ALIVE' -%}
-    {{ k }}
+    {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
+    {% include 'constraints.jinja' %}
   attack: |-
-    Attack request
+    {% include 'instruction.jinja' %}
     Targets:
     {% for k, v in info.status_map.items() -%}
-    {%- if v == 'ALIVE' -%}
-    {{ k }}
+    {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
+    {% include 'constraints.jinja' %}

@@ -1,0 +1,51 @@
+{#-
+  event.jinja (English)
+  Daily event payloads from daily_initialize / daily_finish.
+  - If day_events is present (single-turn snapshot list), enumerate each entry.
+  - Otherwise (multi-turn), fall back to the current info snapshot.
+  Expects: info, (optional) day_events
+  Judge / Vote values may arrive as dataclass instances or plain dicts;
+  `| default` keeps the template tolerant to both.
+-#}
+{%- macro fmt_judge(j) -%}
+{%- set _target = j.target | default(j['target'] if j is mapping else '?') -%}
+{%- set _raw_result = j.result | default(j['result'] if j is mapping else '?') -%}
+{%- set _result = _raw_result.value | default(_raw_result) -%}
+{{ _target }} → {{ _result }}
+{%- endmacro -%}
+{%- macro fmt_votes(vs) -%}
+{%- for v in vs -%}
+{{ v.agent | default(v['agent'] if v is mapping else '?') }} → {{ v.target | default(v['target'] if v is mapping else '?') }}{% if not loop.last %}, {% endif %}
+{%- endfor -%}
+{%- endmacro -%}
+{% if day_events is defined and day_events -%}
+{% for e in day_events -%}
+Day {{ e.day }} ({{ e.phase }})
+{% if e.medium_result is not none %}  Medium: {{ fmt_judge(e.medium_result) }}
+{% endif -%}
+{% if e.divine_result is not none %}  Divine: {{ fmt_judge(e.divine_result) }}
+{% endif -%}
+{% if e.executed_agent is not none %}  Executed: {{ e.executed_agent }}
+{% endif -%}
+{% if e.attacked_agent is not none %}  Attacked: {{ e.attacked_agent }}
+{% endif -%}
+{% if e.vote_list is not none %}  Votes: {{ fmt_votes(e.vote_list) }}
+{% endif -%}
+{% if e.attack_vote_list is not none %}  Attack votes: {{ fmt_votes(e.attack_vote_list) }}
+{% endif -%}
+{% endfor -%}
+{% elif info is not none -%}
+Day {{ info.day }}
+{% if info.medium_result is not none %}Medium: {{ fmt_judge(info.medium_result) }}
+{% endif -%}
+{% if info.divine_result is not none %}Divine: {{ fmt_judge(info.divine_result) }}
+{% endif -%}
+{% if info.executed_agent is not none %}Executed: {{ info.executed_agent }}
+{% endif -%}
+{% if info.attacked_agent is not none %}Attacked: {{ info.attacked_agent }}
+{% endif -%}
+{% if info.vote_list is not none %}Votes: {{ fmt_votes(info.vote_list) }}
+{% endif -%}
+{% if info.attack_vote_list is not none %}Attack votes: {{ fmt_votes(info.attack_vote_list) }}
+{% endif -%}
+{% endif -%}

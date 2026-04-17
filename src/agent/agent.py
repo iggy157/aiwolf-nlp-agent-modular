@@ -42,14 +42,28 @@ _TALK_REQUESTS = {Request.TALK, Request.WHISPER}
 _ACTION_REQUESTS = {Request.VOTE, Request.DIVINE, Request.GUARD, Request.ATTACK}
 _SHARED_REQUESTS = {Request.INITIALIZE, Request.DAILY_INITIALIZE, Request.DAILY_FINISH}
 
-_BLOCKS_DIR = Path(__file__).parent.joinpath("./../../prompts").resolve()
-_JINJA_ENV = Environment(
-    loader=FileSystemLoader(str(_BLOCKS_DIR)),
-    autoescape=select_autoescape(enabled_extensions=(), default=False),
-    trim_blocks=False,
-    lstrip_blocks=False,
-    keep_trailing_newline=False,
-)
+_PROMPTS_ROOT = Path(__file__).parent.joinpath("./../../prompts").resolve()
+# Jinja2 Environment cache keyed by language code (jp / en).
+_JINJA_ENVS: dict[str, Environment] = {}
+
+
+def _get_jinja_env(lang: str) -> Environment:
+    """Return (and cache) a Jinja2 Environment rooted at prompts/<lang>/.
+
+    prompts/<lang>/ をルートとする Jinja2 Environment を返す (キャッシュ有り).
+    言語別ディレクトリが無ければ prompts/ 直下にフォールバックする.
+    """
+    if lang not in _JINJA_ENVS:
+        lang_dir = _PROMPTS_ROOT / lang
+        blocks_dir = lang_dir if lang_dir.exists() else _PROMPTS_ROOT
+        _JINJA_ENVS[lang] = Environment(
+            loader=FileSystemLoader(str(blocks_dir)),
+            autoescape=select_autoescape(enabled_extensions=(), default=False),
+            trim_blocks=False,
+            lstrip_blocks=False,
+            keep_trailing_newline=False,
+        )
+    return _JINJA_ENVS[lang]
 
 _PRICING_ROOT = Path(__file__).parent.joinpath("./../../data/model_cost").resolve()
 # プロセス内で一度だけ料金テーブルをロードして共有する.
@@ -474,7 +488,8 @@ class Agent:
             "mode": self.config.get("mode", "multi_turn"),
             "request_key": request_key,
         }
-        template = _JINJA_ENV.from_string(prompt)
+        env = _get_jinja_env(str(self.config.get("lang", "jp")))
+        template = env.from_string(prompt)
         prompt = template.render(**key).strip()
         targets = self._resolve_targets(request)
         if not targets:

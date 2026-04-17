@@ -1,0 +1,12 @@
+{#-
+  history.jinja (English)
+  Render a talk/whisper history loop.
+  Callers can {% set %} the following before {% include %} to switch source:
+    - history_source: the target history list (default: talk_history)
+    - history_start: slice start index (default: 0)
+-#}
+{% set _source = history_source if history_source is defined else talk_history -%}
+{% set _start = history_start if history_start is defined else 0 -%}
+{% for w in _source[_start:] -%}
+{{ w.agent }}: {{ w.text }}
+{% endfor -%}

@@ -1,0 +1,12 @@
+{#-
+  identity.jinja (English)
+  Character information sent by the server.
+  Info.profile is free-form text (may include name / age / gender / profile etc.);
+  the role is a separate Role enum.
+  Expects: info, role
+-#}
+Your name: {{ info.agent }}
+Your role: {{ role.value }}
+{% if info.profile is not none -%}
+Your profile: {{ info.profile }}
+{% endif -%}

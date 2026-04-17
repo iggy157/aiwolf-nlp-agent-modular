@@ -4,6 +4,8 @@
 # specified in `configs` and merged with this file. On key conflict, the child config wins.
 
 mode: multi_turn
+# Language for prompt blocks under prompts/<lang>/. jp / en.
+lang: en
 
 configs:
   multi_turn: ./config.multi_turn.en.yml
