@@ -9,18 +9,30 @@
     - mention_length: Extra characters allowed *only* when the utterance @-mentions another agent
     - per_agent:      Per-agent daily cap (remaining shown via info.remain_length)
   Falls back to base_length + mention_length when per_talk is absent.
+  The mention example is picked from info.status_map (first name that is not self)
+  so it matches what the server actually accepts (`@<GameName>`): the character
+  name when custom_profile is enabled, or "Agent[01]" otherwise.
 -#}
+{%- set mention_ns = namespace(example=none) -%}
+{%- if info is not none and info.status_map is not none -%}
+{%- for name in info.status_map -%}
+{%- if name != info.agent and mention_ns.example is none -%}
+{%- set mention_ns.example = name -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+{%- set mention_hint = ('`@' ~ mention_ns.example ~ '`') if mention_ns.example is not none else 'the agent name prefixed with `@`' -%}
 {% if request_key == 'talk' -%}
 {%- set ml = (setting.talk.max_length if setting is not none and setting.talk is not none and setting.talk.max_length is not none else none) -%}
 {% if ml is not none and ml.per_talk is not none -%}
 Keep each utterance within {{ ml.per_talk }} characters.
 {% if ml.mention_length is not none and ml.mention_length > 0 -%}
-If you @-mention another agent (e.g. `@Agent[01]`), you may extend your utterance by up to {{ ml.mention_length }} additional characters.
+If you @-mention another agent (e.g. {{ mention_hint }}), you may extend your utterance by up to {{ ml.mention_length }} additional characters.
 {% endif -%}
 {% elif ml is not none and ml.base_length is not none -%}
 Keep each utterance within {{ ml.base_length }} characters.
 {% if ml.mention_length is not none and ml.mention_length > 0 -%}
-If you @-mention another agent (e.g. `@Agent[01]`), you may use up to {{ ml.mention_length }} additional characters (max {{ ml.base_length + ml.mention_length }} total).
+If you @-mention another agent (e.g. {{ mention_hint }}), you may use up to {{ ml.mention_length }} additional characters (max {{ ml.base_length + ml.mention_length }} total).
 {% endif -%}
 {% endif -%}
 {% if info is not none and info.remain_length is not none -%}
@@ -33,12 +45,12 @@ If you have nothing more to say, output "Over".
 {% if ml is not none and ml.per_talk is not none -%}
 Keep each whisper within {{ ml.per_talk }} characters.
 {% if ml.mention_length is not none and ml.mention_length > 0 -%}
-If you @-mention another agent (e.g. `@Agent[01]`), you may extend your whisper by up to {{ ml.mention_length }} additional characters.
+If you @-mention another agent (e.g. {{ mention_hint }}), you may extend your whisper by up to {{ ml.mention_length }} additional characters.
 {% endif -%}
 {% elif ml is not none and ml.base_length is not none -%}
 Keep each whisper within {{ ml.base_length }} characters.
 {% if ml.mention_length is not none and ml.mention_length > 0 -%}
-If you @-mention another agent (e.g. `@Agent[01]`), you may use up to {{ ml.mention_length }} additional characters (max {{ ml.base_length + ml.mention_length }} total).
+If you @-mention another agent (e.g. {{ mention_hint }}), you may use up to {{ ml.mention_length }} additional characters (max {{ ml.base_length + ml.mention_length }} total).
 {% endif -%}
 {% endif -%}
 {% if info is not none and info.remain_length is not none -%}

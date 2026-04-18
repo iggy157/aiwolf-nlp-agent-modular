@@ -10,18 +10,30 @@
     - per_agent:      1日の1エージェントあたりの上限 (残量は info.remain_length で届く)
   per_talk が設定されていない運用 (base + mention 方式) に対応するため, per_talk が
   無い場合は base_length を主軸に, mention_length があれば追加枠を提示する.
+  メンション例は info.status_map から自分以外のエージェント名を1件選んで生成する.
+  (サーバは @<agent.GameName> を検出するため, custom_profile 有効時はキャラクター名,
+   無効時は "Agent[01]" 形式がそのまま正しい例になる.)
 -#}
+{%- set mention_ns = namespace(example=none) -%}
+{%- if info is not none and info.status_map is not none -%}
+{%- for name in info.status_map -%}
+{%- if name != info.agent and mention_ns.example is none -%}
+{%- set mention_ns.example = name -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+{%- set mention_hint = ('`@' ~ mention_ns.example ~ '`') if mention_ns.example is not none else '他のエージェント名の前に @ を付けた形式' -%}
 {% if request_key == 'talk' -%}
 {%- set ml = (setting.talk.max_length if setting is not none and setting.talk is not none and setting.talk.max_length is not none else none) -%}
 {% if ml is not none and ml.per_talk is not none -%}
 1発言あたり最大 {{ ml.per_talk }} 文字以内で出力してください。
 {% if ml.mention_length is not none and ml.mention_length > 0 -%}
-ただし他エージェントへの @メンション (例: `@Agent[01]`) を含む場合に限り, さらに {{ ml.mention_length }} 文字まで延長できます。
+ただし他エージェントへの @メンション (例: {{ mention_hint }}) を含む場合に限り, さらに {{ ml.mention_length }} 文字まで延長できます。
 {% endif -%}
 {% elif ml is not none and ml.base_length is not none -%}
 1発言あたり {{ ml.base_length }} 文字以内で出力してください。
 {% if ml.mention_length is not none and ml.mention_length > 0 -%}
-ただし他エージェントへの @メンション (例: `@Agent[01]`) を含める場合に限り, 追加で {{ ml.mention_length }} 文字まで書けます (合計最大 {{ ml.base_length + ml.mention_length }} 文字)。
+ただし他エージェントへの @メンション (例: {{ mention_hint }}) を含める場合に限り, 追加で {{ ml.mention_length }} 文字まで書けます (合計最大 {{ ml.base_length + ml.mention_length }} 文字)。
 {% endif -%}
 {% endif -%}
 {% if info is not none and info.remain_length is not none -%}
@@ -34,12 +46,12 @@
 {% if ml is not none and ml.per_talk is not none -%}
 1囁きあたり最大 {{ ml.per_talk }} 文字以内で出力してください。
 {% if ml.mention_length is not none and ml.mention_length > 0 -%}
-ただし他エージェントへの @メンション (例: `@Agent[01]`) を含む場合に限り, さらに {{ ml.mention_length }} 文字まで延長できます。
+ただし他エージェントへの @メンション (例: {{ mention_hint }}) を含む場合に限り, さらに {{ ml.mention_length }} 文字まで延長できます。
 {% endif -%}
 {% elif ml is not none and ml.base_length is not none -%}
 1囁きあたり {{ ml.base_length }} 文字以内で出力してください。
 {% if ml.mention_length is not none and ml.mention_length > 0 -%}
-ただし他エージェントへの @メンション (例: `@Agent[01]`) を含める場合に限り, 追加で {{ ml.mention_length }} 文字まで書けます (合計最大 {{ ml.base_length + ml.mention_length }} 文字)。
+ただし他エージェントへの @メンション (例: {{ mention_hint }}) を含める場合に限り, 追加で {{ ml.mention_length }} 文字まで書けます (合計最大 {{ ml.base_length + ml.mention_length }} 文字)。
 {% endif -%}
 {% endif -%}
 {% if info is not none and info.remain_length is not none -%}

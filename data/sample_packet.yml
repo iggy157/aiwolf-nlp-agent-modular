@@ -3,39 +3,44 @@
 # プロンプトテンプレートをレンダリングして preview.md に出力する.
 #
 # 形式は aiwolf_nlp_common.packet.* の from_dict が受ける dict 構造に沿わせる.
+#
+# サーバは custom_profile=true のとき agent.GameName をキャラクター名に設定するため,
+# info.agent / status_map のキー / history の agent など, 全ての「エージェント名」は
+# キャラクター名 (ミナト, タクミ, ケンジ, リュウジ, ダイスケ) とする.
+# preview 英語版ではこれらを位置順に Minato/Takumi/Kenji/Ryuji/Daisuke に置換する.
 
 info:
   game_id: preview-game-0001
   day: 2
-  agent: kanolab1
-  profile: "名前: 佐藤 / 年齢: 25 / 性別: 男性 / 論理的で慎重な性格。村の若手のまとめ役。"
+  agent: ミナト
+  profile: "年齢: 10\n性別: 男性\n性格: ミナトはおっとりした性格で..."
   medium_result: null
   divine_result:
     day: 2
-    agent: kanolab1
-    target: kanolab4
+    agent: ミナト
+    target: リュウジ
     result: HUMAN
-  executed_agent: kanolab3
+  executed_agent: ケンジ
   attacked_agent: null
   vote_list:
     - day: 1
-      agent: kanolab1
-      target: kanolab3
+      agent: ミナト
+      target: ケンジ
     - day: 1
-      agent: kanolab2
-      target: kanolab3
+      agent: タクミ
+      target: ケンジ
     - day: 1
-      agent: kanolab4
-      target: kanolab3
+      agent: リュウジ
+      target: ケンジ
   attack_vote_list: null
   status_map:
-    kanolab1: ALIVE
-    kanolab2: ALIVE
-    kanolab3: DEAD
-    kanolab4: ALIVE
-    kanolab5: ALIVE
+    ミナト: ALIVE
+    タクミ: ALIVE
+    ケンジ: DEAD
+    リュウジ: ALIVE
+    ダイスケ: ALIVE
   role_map:
-    kanolab1: SEER
+    ミナト: SEER
   remain_count: 3
   # per_agent=-1 (無制限) の場合サーバは remain_length を送らないため null とする.
   remain_length: null
@@ -97,29 +102,29 @@ talk_history:
   - idx: 0
     day: 1
     turn: 0
-    agent: kanolab1
+    agent: ミナト
     text: "おはよう。まずは自己紹介から始めませんか。"
     skip: false
     over: false
   - idx: 1
     day: 1
     turn: 0
-    agent: kanolab2
+    agent: タクミ
     text: "いいですね。僕は静かに見守るタイプです。"
     skip: false
     over: false
   - idx: 2
     day: 2
     turn: 0
-    agent: kanolab4
-    text: "昨日の投票で kanolab3 が追放されましたね。次が肝心です。"
+    agent: リュウジ
+    text: "昨日の投票で ケンジ が追放されましたね。次が肝心です。"
     skip: false
     over: false
   - idx: 3
     day: 2
     turn: 0
-    agent: kanolab5
-    text: "私は kanolab2 が少し不自然に感じました。"
+    agent: ダイスケ
+    text: "私は タクミ が少し不自然に感じました。"
     skip: false
     over: false
 
@@ -127,14 +132,14 @@ whisper_history:
   - idx: 0
     day: 1
     turn: 0
-    agent: kanolab1
-    text: "今日は kanolab3 を狙うのが安全そうだね。"
+    agent: ミナト
+    text: "今日は ケンジ を狙うのが安全そうだね。"
     skip: false
     over: false
   - idx: 1
     day: 1
     turn: 0
-    agent: kanolab4
+    agent: リュウジ
     text: "賛成。村側に疑われないよう表では別の話題を振ろう。"
     skip: false
     over: false
@@ -145,26 +150,26 @@ day_events:
     phase: daily_finish
     medium_result: null
     divine_result: null
-    executed_agent: kanolab3
+    executed_agent: ケンジ
     attacked_agent: null
     vote_list:
       - day: 1
-        agent: kanolab1
-        target: kanolab3
+        agent: ミナト
+        target: ケンジ
       - day: 1
-        agent: kanolab2
-        target: kanolab3
+        agent: タクミ
+        target: ケンジ
       - day: 1
-        agent: kanolab4
-        target: kanolab3
+        agent: リュウジ
+        target: ケンジ
     attack_vote_list: null
   - day: 2
     phase: daily_initialize
     medium_result: null
     divine_result:
       day: 2
-      agent: kanolab1
-      target: kanolab4
+      agent: ミナト
+      target: リュウジ
       result: HUMAN
     executed_agent: null
     attacked_agent: null
