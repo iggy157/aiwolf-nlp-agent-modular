@@ -8,12 +8,21 @@
 
 llm:
   type: google
+  # llm 直下でも model / temperature / pricing_mode / base_url を書けば
+  # 下のプロバイダセクション (openai:, google: 等) の値を上書きする (任意).
+  # model: gemini-2.5-pro
   sleep_time: 3
   separate_langchain: false
+  # talk / action には type の他に model / temperature / pricing_mode / base_url を直接書ける.
+  # 指定した項目は下の <provider>: セクションより優先される. 省略した項目は <provider>: から継承.
+  # 同じ会社の異なるモデルを使い分けたい場合はここに model を書く.
+  # type を省略した場合は llm.type をデフォルトとして使う.
   talk:
-    type: google
+    type: openai
+    model: gpt-4o
   action:
-    type: anthropic
+    type: openai
+    model: gpt-4o-mini
 
 openai:
   model: gpt-4o-mini

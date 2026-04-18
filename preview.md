@@ -1,6 +1,6 @@
 # Prompt Preview
 
-- Generated: 2026-04-18T22:59:31
+- Generated: 2026-04-18T23:21:50
 - Sample data: `data/sample_packet.yml`
 - Languages: `en`, `jp`
 

@@ -9,6 +9,9 @@
 
 llm:
   type: google
+  # You may also specify model / temperature / pricing_mode / base_url directly under llm:
+  # to override the matching <provider>: section (optional).
+  # model: gemini-2.5-pro
   sleep_time: 3
   # When true, use separate LangChain instances and llm_message_history per request group.
   # Shared requests (initialize, daily_initialize, daily_finish) are sent to both.
@@ -16,10 +19,16 @@ llm:
   # Action requests (vote, divine, guard, attack) use llm.action.
   # When false, a single llm.type model/history is used (legacy behavior).
   separate_langchain: false
+  # llm.talk / llm.action accept model / temperature / pricing_mode / base_url too.
+  # Fields set here override the matching <provider>: section; omitted fields fall back to it.
+  # This lets you use "same provider, different models" (e.g. talk=openai+gpt-4o,
+  # action=openai+gpt-4o-mini). When `type` is omitted, it defaults to llm.type.
   talk:
-    type: google
+    type: openai
+    model: gpt-4o              # openai + gpt-4o (stronger model for utterances)
   action:
-    type: anthropic
+    type: openai
+    model: gpt-4o-mini         # openai + gpt-4o-mini (lightweight model for decisions)
 
 openai:
   model: gpt-4o-mini

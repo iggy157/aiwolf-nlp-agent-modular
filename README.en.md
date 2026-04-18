@@ -96,19 +96,37 @@ Set `llm.separate_langchain: true` in a child config (`config.multi_turn.{jp,en}
 
 ```yaml
 llm:
-  type: google               # single-model fallback when separate_langchain=false
+  type: openai               # default provider when separate_langchain=false
   sleep_time: 3
   separate_langchain: true
   talk:
-    type: google             # used for talk / whisper
+    type: openai             # used for talk / whisper
+    model: gpt-4o             # ← inline override (overrides openai.model for talk)
   action:
-    type: anthropic          # used for vote / divine / guard / attack
+    type: openai             # used for vote / divine / guard / attack
+    model: gpt-4o-mini        # ← same provider, different model for action
 ```
 
 - **Shared requests** (`initialize` / `daily_initialize` / `daily_finish`) are sent to both models so both histories stay in sync.
 - **Talk-group** requests (`talk` / `whisper`) only update `llm.talk`'s history.
 - **Action-group** requests (`vote` / `divine` / `guard` / `attack`) only update `llm.action`'s history.
 - When `false`, the single `llm.type` model/history is used (legacy behavior).
+
+### Inline setting overrides
+
+`llm.talk` / `llm.action` (and `llm` itself when `separate_langchain=false`) accept the following fields in addition to `type`. Values set here override the matching field from the top-level `<provider>:` section.
+
+| Key | Purpose |
+|---|---|
+| `model` | Model ID to use (e.g. `gpt-4o`, `claude-opus-4-5-20251101`) |
+| `temperature` | Sampling temperature |
+| `pricing_mode` | Switches pricing mode (`standard` / `batch`, etc.) |
+| `base_url` | Custom endpoint URL (used by ollama) |
+
+- Omitted fields fall back to the matching value in `<provider>:`.
+- Omitting `type` falls back to `llm.type` as the default.
+- **`api_key` must not be set here** — it is refused at startup. Use the environment variables in `config/.env` instead.
+- This enables "same provider, different models" (e.g. `talk` = `openai`+`gpt-4o`, `action` = `openai`+`gpt-4o-mini`).
 
 ## Prompt blocks
 

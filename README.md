@@ -96,19 +96,37 @@ configs:
 
 ```yaml
 llm:
-  type: google               # separate_langchain=false 時の単一モデル
+  type: openai               # separate_langchain=false 時の既定プロバイダ
   sleep_time: 3
   separate_langchain: true   # ← true で分離
   talk:
-    type: google             # talk / whisper はこちら
+    type: openai             # talk / whisper はこちら
+    model: gpt-4o            # ← インライン上書き (openai: セクションの model を上書き)
   action:
-    type: anthropic          # vote / divine / guard / attack はこちら
+    type: openai             # vote / divine / guard / attack はこちら
+    model: gpt-4o-mini       # ← 同じ会社 (openai) で talk と別モデルを指定可能
 ```
 
 - **共通リクエスト** (`initialize` / `daily_initialize` / `daily_finish`) は両方のモデルに送信され、両系統の履歴に情報共有される
 - **発話系** (`talk` / `whisper`) は `llm.talk` の履歴のみ更新
 - **アクション系** (`vote` / `divine` / `guard` / `attack`) は `llm.action` の履歴のみ更新
 - `false` の場合は `llm.type` で指定した単一モデル・単一履歴で従来通り動作
+
+### インライン設定オーバーライド
+
+`llm.talk` / `llm.action` (および `separate_langchain=false` 時の `llm` 直下) には、`type` に加えて以下のフィールドを直接書くと、下の `<provider>:` セクションの値を上書きします。
+
+| キー | 用途 |
+|---|---|
+| `model` | 使うモデル ID (例: `gpt-4o` / `claude-opus-4-5-20251101`) |
+| `temperature` | 温度パラメータ |
+| `pricing_mode` | `standard` / `batch` など料金モード切替 |
+| `base_url` | ollama 用のエンドポイント URL |
+
+- 省略した項目は下の `<provider>:` セクションの値を継承します
+- `type` を省略すると `llm.type` がデフォルトとして使われます
+- **`api_key` は書けません**(書くと起動時にエラー)。API キーは `config/.env` の環境変数で指定してください
+- これにより「同じ会社の違うモデル」(talk=`openai`+`gpt-4o`、action=`openai`+`gpt-4o-mini` など)を talk / action に割り当てられます
 
 ## プロンプトブロック
 

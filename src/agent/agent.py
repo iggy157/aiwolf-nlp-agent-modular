@@ -578,20 +578,30 @@ class Agent:
         """
         return self.agent_name
 
-    def _create_llm_model(self, model_type: str) -> tuple[BaseChatModel, dict[str, str]]:
+    def _create_llm_model(
+        self,
+        model_type: str,
+        overrides: dict[str, Any] | None = None,
+    ) -> tuple[BaseChatModel, dict[str, str]]:
         """Create an LLM model instance and its cost metadata for the given provider type.
 
         指定されたプロバイダタイプのLLMモデルインスタンスと, 料金計算用メタ情報を生成する.
+        `overrides` は llm.* / llm.talk.* / llm.action.* から抽出した設定で, トップレベル
+        `<provider>:` セクションの値より優先される (同じ会社で別モデルを talk / action で
+        使い分けたい場合に利用する).
 
         Args:
             model_type (str): Provider type / プロバイダタイプ
+            overrides (dict[str, Any] | None): Per-role overrides / ロール別の上書き設定
 
         Returns:
             tuple[BaseChatModel, dict[str, str]]:
                 Created LLM model and its cost metadata (provider_key / model_id / pricing_mode).
                 生成したLLMモデルと料金計算用メタ情報.
         """
-        section = self.config.get(model_type, {}) or {}
+        base_section = self.config.get(model_type, {}) or {}
+        # トップレベルのプロバイダ設定を base に, ロール側の overrides を上書き適用.
+        section = {**base_section, **(overrides or {})}
         pricing_mode = str(section.get("pricing_mode", "standard"))
         model_id = str(section.get("model", ""))
         meta = {"provider_key": model_type, "model_id": model_id, "pricing_mode": pricing_mode}
@@ -646,6 +656,27 @@ class Agent:
             case _:
                 raise ValueError(model_type, "Unknown LLM type")
 
+    # llm.* / llm.talk.* / llm.action.* の中で「provider セクションを上書きする」設定.
+    # これ以外のキーはロール制御用 (type, sleep_time, separate_langchain, talk, action) か
+    # 明示的に禁止するキー (api_key) のどちらかなので overrides には含めない.
+    _LLM_OVERRIDE_KEYS: tuple[str, ...] = ("model", "temperature", "pricing_mode", "base_url")
+
+    def _extract_llm_overrides(
+        self, role_cfg: dict[str, Any], *, role_name: str,
+    ) -> dict[str, Any]:
+        """Extract override fields from an `llm.*` / `llm.talk.*` / `llm.action.*` block.
+
+        config の該当ブロックから <provider> セクションを上書きする項目を抜き出す.
+        セキュリティ上の事故防止のため, api_key がここに置かれたら明示的にエラーにする.
+        """
+        if "api_key" in role_cfg:
+            msg = (
+                f"api_key must not be set in llm.{role_name}; "
+                "use environment variables (OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_API_KEY) instead."
+            )
+            raise ValueError(msg)
+        return {k: role_cfg[k] for k in self._LLM_OVERRIDE_KEYS if k in role_cfg}
+
     def initialize(self) -> None:
         """Perform initialization for game start request.
 
@@ -654,14 +685,28 @@ class Agent:
         if self.info is None:
             return
 
+        llm_cfg = self.config["llm"]
+        default_type = str(llm_cfg.get("type", ""))
+
         if self._is_separate_langchain():
-            talk_type = str(self.config["llm"]["talk"]["type"])
-            action_type = str(self.config["llm"]["action"]["type"])
-            self.llm_model_talk, self.llm_meta_talk = self._create_llm_model(talk_type)
-            self.llm_model_action, self.llm_meta_action = self._create_llm_model(action_type)
+            talk_cfg = llm_cfg.get("talk") or {}
+            action_cfg = llm_cfg.get("action") or {}
+            # type は省略時 llm.type をデフォルトとして使う.
+            talk_type = str(talk_cfg.get("type") or default_type)
+            action_type = str(action_cfg.get("type") or default_type)
+            talk_overrides = self._extract_llm_overrides(talk_cfg, role_name="talk")
+            action_overrides = self._extract_llm_overrides(action_cfg, role_name="action")
+            self.llm_model_talk, self.llm_meta_talk = self._create_llm_model(
+                talk_type, talk_overrides,
+            )
+            self.llm_model_action, self.llm_meta_action = self._create_llm_model(
+                action_type, action_overrides,
+            )
         else:
-            model_type = str(self.config["llm"]["type"])
-            self.llm_model, self.llm_meta_default = self._create_llm_model(model_type)
+            default_overrides = self._extract_llm_overrides(llm_cfg, role_name="")
+            self.llm_model, self.llm_meta_default = self._create_llm_model(
+                default_type, default_overrides,
+            )
         self._send_message_to_llm(self.request)
 
     def daily_initialize(self) -> None:
