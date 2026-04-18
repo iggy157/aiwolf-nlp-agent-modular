@@ -7,6 +7,18 @@ mode: multi_turn
 # Language for prompt blocks under prompts/<lang>/. jp / en.
 lang: en
 
+# Prompt block heading settings.
+# Set enabled: true to prepend a heading to each block's rendered body.
+# style: one of markdown | xml.
+#   markdown → "### history"
+#   xml      → "<history>" ... "</history>" (auto-appends a closing tag)
+# Heading text comes from prompts/<lang>/_labels.yml (falls back to the jinja
+# filename stem if undefined). For lang=en there is no _labels.yml, so the
+# stem (e.g. "history") is used verbatim.
+headings:
+  enabled: false
+  style: markdown
+
 configs:
   multi_turn: ./config.multi_turn.en.yml
   single_turn: ./config.single_turn.en.yml

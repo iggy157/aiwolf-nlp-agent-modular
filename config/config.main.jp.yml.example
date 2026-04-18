@@ -7,6 +7,16 @@ mode: multi_turn
 # プロンプトブロック (prompts/<lang>/) の言語. jp / en.
 lang: jp
 
+# プロンプトブロックの見出し設定.
+# enabled: true にすると各ブロック冒頭に見出しが付与される.
+# style: markdown | xml の2種から選択.
+#   markdown → "### 履歴"
+#   xml      → "<履歴>" ... "</履歴>" (閉じタグも自動付与)
+# 見出し文字列は prompts/<lang>/_labels.yml で定義 (未定義ならファイル名をそのまま使用).
+headings:
+  enabled: false
+  style: markdown
+
 configs:
   multi_turn: ./config.multi_turn.jp.yml
   single_turn: ./config.single_turn.jp.yml

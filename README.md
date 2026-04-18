@@ -6,7 +6,7 @@
 
 - **multi-turn / single-turn モード** を config で切替
 - **LangChain 分離**: 発話系（talk/whisper）とアクション系（vote/divine/guard/attack）で別モデル・別 `llm_message_history` を使用可能
-- **プロンプトブロック**: `prompts/{jp,en}/*.jinja` を `{% include %}` で再利用（日英切替は config の `lang`）
+- **プロンプトブロック**: `prompts/{jp,en}/*.jinja` を `{{ block('...') }}` で再利用（日英切替は config の `lang`）、ON/OFF と `markdown` / `xml` の見出し付与にも対応
 - **コストトレース**: 呼び出しごとに `log/<game>/cost_summary.{json,md}` をリアルタイム生成
 
 ## 目次
@@ -112,7 +112,7 @@ llm:
 
 ## プロンプトブロック
 
-`prompts/jp/` と `prompts/en/` の配下にそれぞれ 5 つの再利用可能 Jinja2 ブロックがあります。メイン config の `lang: jp` / `lang: en` で参照先を切替えます。config の `prompt.<request>` から `{% include %}` で参照してください。
+`prompts/jp/` と `prompts/en/` の配下にそれぞれ 5 つの再利用可能 Jinja2 ブロックがあります。メイン config の `lang: jp` / `lang: en` で参照先を切替えます。config の `prompt.<request>` からは `{{ block('<name>') }}` で参照してください。
 
 | ブロック | 役割 | 主な変数 |
 |---|---|---|
@@ -127,12 +127,35 @@ llm:
 ```jinja
 {% set history_source = talk_history %}
 {% set history_start = sent_talk_count %}
-{% include 'history.jinja' %}
-{% include 'instruction.jinja' %}
-{% include 'constraints.jinja' %}
+{{ block('history') }}
+{{ block('instruction') }}
+{{ block('constraints') }}
 ```
 
+`block('<name>')` は `prompts/<lang>/<name>.jinja` を呼び出し側コンテキストでレンダした結果を返します（素の `{% include %}` と同等の挙動）。加えて後述の **見出し設定** が有効な場合は、本文冒頭に見出しを自動付与します。
+
 jp / en の両言語のブロックと config が揃っています。新しい言語を追加する場合は `prompts/<lang>/` と `config/config.<mode>.<lang>.yml.example` の両方を用意し、メイン config の `lang` と `configs:` の参照先も `<lang>` 付きに書き換えてください。
+
+### 見出しの自動付与（`headings`）
+
+メイン config の `headings` セクションで、各ブロックの冒頭に見出しを付けるかどうかを切替えられます。LLM から見たときにブロック境界を明示したい場面で有効です。
+
+```yaml
+# config.main.jp.yml（抜粋）
+headings:
+  enabled: false     # true にすると見出しを付与
+  style: markdown    # markdown | xml の2種
+```
+
+| style | 出力例（lang=jp） | 出力例（lang=en） |
+|---|---|---|
+| `markdown` | `### 履歴` に続けて本文 | `### history` に続けて本文 |
+| `xml` | `<履歴>` … 本文 … `</履歴>` | `<history>` … 本文 … `</history>` |
+
+- 見出し文字列は **ブロックのファイル名（`.jinja` の stem）** が基本。日本語見出しは `prompts/jp/_labels.yml` に定義（未登録のブロックはファイル名がそのまま使われます）
+- 英語側（`prompts/en/`）には `_labels.yml` を置いていないため、常にファイル名（例 `history`, `instruction`）が見出しになります
+- 新しいブロック `foo.jinja` を追加したら、必要なら `prompts/jp/_labels.yml` に `foo: ○○` と 1 行追記するだけでよく、Python 側の変更は不要です
+- `enabled: false`（既定）のときは従来どおり見出しなしで連結されます
 
 ## コストトレース
 
@@ -195,7 +218,7 @@ aiwolf-jsai-agent/
 │   ├── models.md                 # 自動生成されたモデル一覧
 │   └── sample_packet.yml         # preview 用サンプル
 ├── prompts/
-│   ├── jp/                       # Jinja2 ブロック 日本語 (5ファイル)
+│   ├── jp/                       # Jinja2 ブロック 日本語 (5ファイル + _labels.yml)
 │   └── en/                       # Jinja2 ブロック 英語 (5ファイル)
 ├── scripts/                      # ユーティリティスクリプト
 ├── src/

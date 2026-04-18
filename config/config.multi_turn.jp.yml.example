@@ -44,59 +44,59 @@ claude:
 # include し, 両系統に最低限の情報共有を行う.
 prompt:
   initialize: |-
-    {% include 'identity.jinja' %}
-    {% include 'instruction.jinja' %}
+    {{ block('identity') }}
+    {{ block('instruction') }}
     以降のリクエストには日本語で応答してください。レスポンスはそのままゲームに送信されるため, 不要な情報を含めないでください。
   daily_initialize: |-
-    {% include 'instruction.jinja' %}
-    {% include 'event.jinja' %}
+    {{ block('instruction') }}
+    {{ block('event') }}
   daily_finish: |-
-    {% include 'instruction.jinja' %}
-    {% include 'event.jinja' %}
+    {{ block('instruction') }}
+    {{ block('event') }}
     {% set history_source = talk_history -%}
     {% set history_start = sent_talk_count -%}
-    {% include 'history.jinja' %}
+    {{ block('history') }}
   talk: |-
     {% set history_source = talk_history -%}
     {% set history_start = sent_talk_count -%}
-    {% include 'history.jinja' %}
-    {% include 'instruction.jinja' %}
-    {% include 'constraints.jinja' %}
+    {{ block('history') }}
+    {{ block('instruction') }}
+    {{ block('constraints') }}
   whisper: |-
     {% set history_source = whisper_history -%}
     {% set history_start = sent_whisper_count -%}
-    {% include 'history.jinja' %}
-    {% include 'instruction.jinja' %}
-    {% include 'constraints.jinja' %}
+    {{ block('history') }}
+    {{ block('instruction') }}
+    {{ block('constraints') }}
   divine: |-
-    {% include 'instruction.jinja' %}
+    {{ block('instruction') }}
     対象:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
-    {% include 'constraints.jinja' %}
+    {{ block('constraints') }}
   guard: |-
-    {% include 'instruction.jinja' %}
+    {{ block('instruction') }}
     対象:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
-    {% include 'constraints.jinja' %}
+    {{ block('constraints') }}
   vote: |-
-    {% include 'instruction.jinja' %}
+    {{ block('instruction') }}
     対象:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
-    {% include 'constraints.jinja' %}
+    {{ block('constraints') }}
   attack: |-
-    {% include 'instruction.jinja' %}
+    {{ block('instruction') }}
     対象:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
-    {% include 'constraints.jinja' %}
+    {{ block('constraints') }}

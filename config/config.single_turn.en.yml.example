@@ -39,100 +39,100 @@ claude:
 
 prompt:
   talk: |-
-    {% include 'identity.jinja' %}
+    {{ block('identity') }}
 
     # Daily events
-    {% include 'event.jinja' %}
+    {{ block('event') }}
 
     # Talk history
     {% set history_source = talk_history -%}
     {% set history_start = 0 -%}
-    {% include 'history.jinja' %}
+    {{ block('history') }}
 
-    {% include 'instruction.jinja' %}
-    {% include 'constraints.jinja' %}
+    {{ block('instruction') }}
+    {{ block('constraints') }}
   whisper: |-
-    {% include 'identity.jinja' %}
+    {{ block('identity') }}
 
     # Daily events
-    {% include 'event.jinja' %}
+    {{ block('event') }}
 
     # Whisper history
     {% set history_source = whisper_history -%}
     {% set history_start = 0 -%}
-    {% include 'history.jinja' %}
+    {{ block('history') }}
 
-    {% include 'instruction.jinja' %}
-    {% include 'constraints.jinja' %}
+    {{ block('instruction') }}
+    {{ block('constraints') }}
   divine: |-
-    {% include 'identity.jinja' %}
+    {{ block('identity') }}
 
     # Daily events
-    {% include 'event.jinja' %}
+    {{ block('event') }}
 
     # Talk history
     {% set history_source = talk_history -%}
     {% set history_start = 0 -%}
-    {% include 'history.jinja' %}
+    {{ block('history') }}
 
-    {% include 'instruction.jinja' %}
+    {{ block('instruction') }}
     Targets:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
-    {% include 'constraints.jinja' %}
+    {{ block('constraints') }}
   guard: |-
-    {% include 'identity.jinja' %}
+    {{ block('identity') }}
 
     # Daily events
-    {% include 'event.jinja' %}
+    {{ block('event') }}
 
     # Talk history
     {% set history_source = talk_history -%}
     {% set history_start = 0 -%}
-    {% include 'history.jinja' %}
+    {{ block('history') }}
 
-    {% include 'instruction.jinja' %}
+    {{ block('instruction') }}
     Targets:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
-    {% include 'constraints.jinja' %}
+    {{ block('constraints') }}
   vote: |-
-    {% include 'identity.jinja' %}
+    {{ block('identity') }}
 
     # Daily events
-    {% include 'event.jinja' %}
+    {{ block('event') }}
 
     # Talk history
     {% set history_source = talk_history -%}
     {% set history_start = 0 -%}
-    {% include 'history.jinja' %}
+    {{ block('history') }}
 
-    {% include 'instruction.jinja' %}
+    {{ block('instruction') }}
     Targets:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
-    {% include 'constraints.jinja' %}
+    {{ block('constraints') }}
   attack: |-
-    {% include 'identity.jinja' %}
+    {{ block('identity') }}
 
     # Daily events
-    {% include 'event.jinja' %}
+    {{ block('event') }}
 
     # Whisper history
     {% set history_source = whisper_history -%}
     {% set history_start = 0 -%}
-    {% include 'history.jinja' %}
+    {{ block('history') }}
 
-    {% include 'instruction.jinja' %}
+    {{ block('instruction') }}
     Targets:
     {% for k, v in info.status_map.items() -%}
     {%- if v == 'ALIVE' %}{{ k }}
     {% endif -%}
     {%- endfor %}
-    {% include 'constraints.jinja' %}
+    {{ block('constraints') }}

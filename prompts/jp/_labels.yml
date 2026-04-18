@@ -1,0 +1,10 @@
+# 日本語見出しラベル.
+# prompts/jp/<name>.jinja の <name> に対応する日本語の見出し文字列を定義する.
+# 未定義のブロックはファイル名 (stem) がそのまま見出しに使われる.
+# 新しいブロックを追加するときは, 必要なら1行足すだけでよい.
+
+history: 履歴
+instruction: 指示
+identity: 話者情報
+event: イベント
+constraints: 出力制約

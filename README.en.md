@@ -6,7 +6,7 @@ LLM agent for the AIWolf Competition (Natural Language Division) — JSAI 2026 e
 
 - **multi-turn / single-turn modes** switchable via config
 - **Split LangChain**: use separate models and separate `llm_message_history` for talk-group (talk/whisper) vs action-group (vote/divine/guard/attack) requests
-- **Prompt blocks**: reusable Jinja2 fragments under `prompts/{jp,en}/` composed with `{% include %}` (switch via config's `lang`)
+- **Prompt blocks**: reusable Jinja2 fragments under `prompts/{jp,en}/` composed with `{{ block('...') }}` (switch via config's `lang`), with an optional `markdown` / `xml` heading toggle
 - **Cost tracking**: per-call USD cost written to `log/<game>/cost_summary.{json,md}` in real time
 
 ## Contents
@@ -112,7 +112,7 @@ llm:
 
 ## Prompt blocks
 
-Five reusable Jinja2 blocks live under `prompts/jp/` and `prompts/en/` respectively. The `lang: jp` / `lang: en` field in the main config selects which directory to load. Reference the blocks from `prompt.<request>` via `{% include %}`.
+Five reusable Jinja2 blocks live under `prompts/jp/` and `prompts/en/` respectively. The `lang: jp` / `lang: en` field in the main config selects which directory to load. Reference the blocks from `prompt.<request>` via `{{ block('<name>') }}`.
 
 | Block | Purpose | Key variables |
 |---|---|---|
@@ -127,12 +127,35 @@ Usage:
 ```jinja
 {% set history_source = talk_history %}
 {% set history_start = sent_talk_count %}
-{% include 'history.jinja' %}
-{% include 'instruction.jinja' %}
-{% include 'constraints.jinja' %}
+{{ block('history') }}
+{{ block('instruction') }}
+{{ block('constraints') }}
 ```
 
+`block('<name>')` renders `prompts/<lang>/<name>.jinja` with the caller's context (same result as a plain `{% include %}`). When the **heading toggle** (see below) is on, it also prepends a heading line.
+
 Both jp and en blocks + configs ship out of the box. To add another language, create `prompts/<lang>/` with the same 5 files and `config/config.<mode>.<lang>.yml.example`, then set `lang: <lang>` in the main config and point its `configs:` block at the `<lang>`-suffixed children.
+
+### Heading toggle (`headings`)
+
+The `headings` section in the main config controls whether each block is prefixed with a heading. This is useful when you want the LLM to see explicit block boundaries.
+
+```yaml
+# config.main.en.yml (excerpt)
+headings:
+  enabled: false     # true to prepend headings
+  style: markdown    # markdown | xml
+```
+
+| style | Output (lang=en) | Output (lang=jp) |
+|---|---|---|
+| `markdown` | `### history` followed by the body | `### 履歴` followed by the body |
+| `xml` | `<history>` … body … `</history>` | `<履歴>` … body … `</履歴>` |
+
+- The heading text defaults to the **block's filename stem** (e.g. `history` for `history.jinja`). Japanese labels are defined in `prompts/jp/_labels.yml`; any unlabeled block falls back to the stem.
+- `prompts/en/` ships no `_labels.yml`, so English headings are always the filename stem.
+- To add a new block `foo.jinja`, simply drop the jinja files in place; optionally add one line (`foo: ○○`) to `prompts/jp/_labels.yml` for a Japanese label. No Python changes needed.
+- With `enabled: false` (the default) blocks are concatenated with no headings, preserving the previous behavior.
 
 ## Cost tracking
 
@@ -195,7 +218,7 @@ aiwolf-jsai-agent/
 │   ├── models.md                 # Generated model reference
 │   └── sample_packet.yml         # Sample for preview
 ├── prompts/
-│   ├── jp/                       # Japanese Jinja2 blocks (5 files)
+│   ├── jp/                       # Japanese Jinja2 blocks (5 files + _labels.yml)
 │   └── en/                       # English Jinja2 blocks (5 files)
 ├── scripts/                      # Utility scripts
 ├── src/
