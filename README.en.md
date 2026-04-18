@@ -33,10 +33,10 @@ cd aiwolf-jsai-agent
 cp config/.env.example config/.env
 
 # 3) Copy the 3-file config set (main + multi_turn child + single_turn child)
-#    Swap .en for .jp if you prefer Japanese prompts
-cp config/config.main.en.yml.example         config/config.main.yml
-cp config/config.multi_turn.en.yml.example   config/config.multi_turn.yml
-cp config/config.single_turn.en.yml.example  config/config.single_turn.yml
+#    Swap .en for .jp if you prefer Japanese prompts (the main config's configs: block already points to the .en children)
+cp config/config.main.en.yml.example         config/config.main.en.yml
+cp config/config.multi_turn.en.yml.example   config/config.multi_turn.en.yml
+cp config/config.single_turn.en.yml.example  config/config.single_turn.en.yml
 
 # 4) Install dependencies
 uv sync
@@ -45,12 +45,14 @@ uv sync
 After setting API keys (`OPENAI_API_KEY` / `GOOGLE_API_KEY` / `CLAUDE_API_KEY`, whichever you use) in `config/.env`, run:
 
 ```bash
-# Launch agents (defaults to ./config/config.main.yml; the matching child config is auto-merged based on `mode`)
+# Launch agents (defaults to ./config/config.main.jp.yml; the matching child config is auto-merged based on `mode`)
 uv run python src/main.py
 
-# Use -c only when you want a non-default path or multiple configs in parallel
-uv run python src/main.py -c ./config/my_config.main.yml
-uv run python src/main.py -c './config/*.main.yml'
+# Use -c to switch to English prompts
+uv run python src/main.py -c ./config/config.main.en.yml
+
+# ...or to run multiple configs in parallel
+uv run python src/main.py -c './config/*.main.*.yml'
 ```
 
 > Without `uv`: `python -m venv .venv && source .venv/bin/activate && pip install -e .`, then `python src/main.py`.
@@ -61,18 +63,18 @@ Configuration is split across three files. The main config references the child 
 
 | File | Role |
 |---|---|
-| `config/config.main.yml` | Mode (`mode: multi_turn` / `single_turn`), WebSocket, agent, log settings |
-| `config/config.multi_turn.yml` | LLM settings and prompts for multi-turn mode |
-| `config/config.single_turn.yml` | LLM settings and prompts for single-turn mode |
+| `config/config.main.{jp,en}.yml` | Mode (`mode: multi_turn` / `single_turn`), WebSocket, agent, log settings |
+| `config/config.multi_turn.{jp,en}.yml` | LLM settings and prompts for multi-turn mode |
+| `config/config.single_turn.{jp,en}.yml` | LLM settings and prompts for single-turn mode |
 
-The main config's `configs:` block maps each mode to a child config path. At load time the matching child config is merged on top of the main config (child wins on key collision).
+The main config's `configs:` block maps each mode to a child config path. At load time the matching child config is merged on top of the main config (child wins on key collision). Keeping the `.jp` / `.en` language suffix lets both sets coexist in the same directory.
 
 ```yaml
-# config.main.yml (excerpt)
+# config.main.en.yml (excerpt)
 mode: multi_turn
 configs:
-  multi_turn: ./config.multi_turn.yml
-  single_turn: ./config.single_turn.yml
+  multi_turn: ./config.multi_turn.en.yml
+  single_turn: ./config.single_turn.en.yml
 ```
 
 ## Modes: multi-turn / single-turn
@@ -86,11 +88,11 @@ configs:
 - `initialize` / `daily_initialize` / `daily_finish` are **not sent to the LLM**. Their payloads are snapshotted inside the agent (`day_events`).
 - On talk / whisper / divine / etc., `day_events` and the full `talk_history` / `whisper_history` are rendered directly into the prompt body.
 
-Switch modes simply by changing the `mode` field in `config.main.yml`.
+Switch modes simply by changing the `mode` field in the main config (`config.main.jp.yml` / `config.main.en.yml`).
 
 ## Split LangChain (talk group vs action group)
 
-Set `llm.separate_langchain: true` in `config.multi_turn.yml` or `config.single_turn.yml` to use separate LangChain instances and separate `llm_message_history` per request group.
+Set `llm.separate_langchain: true` in a child config (`config.multi_turn.{jp,en}.yml` or `config.single_turn.{jp,en}.yml`) to use separate LangChain instances and separate `llm_message_history` per request group.
 
 ```yaml
 llm:
@@ -110,7 +112,7 @@ llm:
 
 ## Prompt blocks
 
-Five reusable Jinja2 blocks live under `prompts/jp/` and `prompts/en/` respectively. The `lang: jp` / `lang: en` field in `config.main.yml` selects which directory to load. Reference the blocks from `prompt.<request>` via `{% include %}`.
+Five reusable Jinja2 blocks live under `prompts/jp/` and `prompts/en/` respectively. The `lang: jp` / `lang: en` field in the main config selects which directory to load. Reference the blocks from `prompt.<request>` via `{% include %}`.
 
 | Block | Purpose | Key variables |
 |---|---|---|
@@ -130,7 +132,7 @@ Usage:
 {% include 'constraints.jinja' %}
 ```
 
-Both jp and en blocks + configs ship out of the box. To add another language, create `prompts/<lang>/` with the same 5 files and `config/config.<mode>.<lang>.yml.example`, then set `lang: <lang>` in `config.main.yml`.
+Both jp and en blocks + configs ship out of the box. To add another language, create `prompts/<lang>/` with the same 5 files and `config/config.<mode>.<lang>.yml.example`, then set `lang: <lang>` in the main config and point its `configs:` block at the `<lang>`-suffixed children.
 
 ## Cost tracking
 

@@ -33,10 +33,10 @@ cd aiwolf-jsai-agent
 cp config/.env.example config/.env
 
 # 3) 3分割configを example からコピー (メイン + multi_turn子 + single_turn子)
-#    英語プロンプトを使うなら .jp を .en に置き換える
-cp config/config.main.jp.yml.example         config/config.main.yml
-cp config/config.multi_turn.jp.yml.example   config/config.multi_turn.yml
-cp config/config.single_turn.jp.yml.example  config/config.single_turn.yml
+#    英語プロンプトを使うなら .jp を .en に置き換える (メイン config の configs: セクションも .en.yml を参照済み)
+cp config/config.main.jp.yml.example         config/config.main.jp.yml
+cp config/config.multi_turn.jp.yml.example   config/config.multi_turn.jp.yml
+cp config/config.single_turn.jp.yml.example  config/config.single_turn.jp.yml
 
 # 4) 依存インストール
 uv sync
@@ -45,12 +45,14 @@ uv sync
 `config/.env` に API キー（`OPENAI_API_KEY` / `GOOGLE_API_KEY` / `CLAUDE_API_KEY` のうち使うもの）を設定後、実行:
 
 ```bash
-# エージェントを起動 (既定で ./config/config.main.yml を読み, モードに応じて子configを自動マージ)
+# エージェントを起動 (既定で ./config/config.main.jp.yml を読み, モードに応じて子configを自動マージ)
 uv run python src/main.py
 
-# 明示的に指定する場合 / 複数 config を並列実行する場合のみ -c を使う
-uv run python src/main.py -c ./config/my_config.main.yml
-uv run python src/main.py -c './config/*.main.yml'
+# 英語プロンプトを使う場合は -c で明示指定
+uv run python src/main.py -c ./config/config.main.en.yml
+
+# 複数 config を並列実行する場合も -c を使う
+uv run python src/main.py -c './config/*.main.*.yml'
 ```
 
 > `uv` を使わない場合: `python -m venv .venv && source .venv/bin/activate && pip install -e .` の後、`python src/main.py` で実行。
@@ -61,18 +63,18 @@ uv run python src/main.py -c './config/*.main.yml'
 
 | ファイル | 役割 |
 |---|---|
-| `config/config.main.yml` | モード (`mode: multi_turn` / `single_turn`)、WebSocket、agent、log 等の共通設定 |
-| `config/config.multi_turn.yml` | multi-turn 時の LLM 設定・プロンプト定義 |
-| `config/config.single_turn.yml` | single-turn 時の LLM 設定・プロンプト定義 |
+| `config/config.main.{jp,en}.yml` | モード (`mode: multi_turn` / `single_turn`)、WebSocket、agent、log 等の共通設定 |
+| `config/config.multi_turn.{jp,en}.yml` | multi-turn 時の LLM 設定・プロンプト定義 |
+| `config/config.single_turn.{jp,en}.yml` | single-turn 時の LLM 設定・プロンプト定義 |
 
-メイン config の `configs:` セクションで子 config のパスを指定。`mode` に応じて対応する子 config がロード時にマージされます（キー衝突時は子 config 優先）。
+メイン config の `configs:` セクションで子 config のパスを指定。`mode` に応じて対応する子 config がロード時にマージされます（キー衝突時は子 config 優先）。言語識別子 (`.jp` / `.en`) を残すことで日英両方のセットを同一ディレクトリに共存させられます。
 
 ```yaml
-# config.main.yml (抜粋)
+# config.main.jp.yml (抜粋)
 mode: multi_turn
 configs:
-  multi_turn: ./config.multi_turn.yml
-  single_turn: ./config.single_turn.yml
+  multi_turn: ./config.multi_turn.jp.yml
+  single_turn: ./config.single_turn.jp.yml
 ```
 
 ## モード: multi-turn / single-turn
@@ -86,11 +88,11 @@ configs:
 - `initialize` / `daily_initialize` / `daily_finish` は **LLM に送信せず**、agent 内部 (`day_events`) にスナップショット保持
 - talk / whisper / divine 等の各リクエストで、`day_events` とフル `talk_history` / `whisper_history` をプロンプト本文に埋め込み
 
-モード切替は `config.main.yml` の `mode` フィールドを変更するだけです。
+モード切替はメイン config (`config.main.jp.yml` / `config.main.en.yml`) の `mode` フィールドを変更するだけです。
 
 ## LangChain 分離 (発話系 / アクション系)
 
-`config.multi_turn.yml` または `config.single_turn.yml` の `llm.separate_langchain` を `true` にすると、リクエスト種別ごとに LangChain インスタンスと `llm_message_history` を分離できます。
+子 config (`config.multi_turn.{jp,en}.yml` または `config.single_turn.{jp,en}.yml`) の `llm.separate_langchain` を `true` にすると、リクエスト種別ごとに LangChain インスタンスと `llm_message_history` を分離できます。
 
 ```yaml
 llm:
@@ -110,7 +112,7 @@ llm:
 
 ## プロンプトブロック
 
-`prompts/jp/` と `prompts/en/` の配下にそれぞれ 5 つの再利用可能 Jinja2 ブロックがあります。`config.main.yml` の `lang: jp` / `lang: en` で参照先を切替えます。config の `prompt.<request>` から `{% include %}` で参照してください。
+`prompts/jp/` と `prompts/en/` の配下にそれぞれ 5 つの再利用可能 Jinja2 ブロックがあります。メイン config の `lang: jp` / `lang: en` で参照先を切替えます。config の `prompt.<request>` から `{% include %}` で参照してください。
 
 | ブロック | 役割 | 主な変数 |
 |---|---|---|
@@ -130,7 +132,7 @@ llm:
 {% include 'constraints.jinja' %}
 ```
 
-jp / en の両言語のブロックと config が揃っています。新しい言語を追加する場合は `prompts/<lang>/` と `config/config.<mode>.<lang>.yml.example` の両方を用意し、`config.main.yml` の `lang` を書き換えてください。
+jp / en の両言語のブロックと config が揃っています。新しい言語を追加する場合は `prompts/<lang>/` と `config/config.<mode>.<lang>.yml.example` の両方を用意し、メイン config の `lang` と `configs:` の参照先も `<lang>` 付きに書き換えてください。
 
 ## コストトレース
 
