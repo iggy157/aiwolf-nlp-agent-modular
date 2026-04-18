@@ -37,8 +37,9 @@ info:
   role_map:
     kanolab1: SEER
   remain_count: 3
-  remain_length: 450
-  remain_skip: 2
+  # per_agent=-1 (無制限) の場合サーバは remain_length を送らないため null とする.
+  remain_length: null
+  remain_skip: 0
 
 setting:
   agent_count: 5
@@ -48,30 +49,33 @@ setting:
     SEER: 1
     VILLAGER: 3
   vote_visibility: true
+  # aiwolf-nlp-server/config/default_5.yml の実運用設定に合わせてある.
+  # per_talk が -1 のときサーバは JSON から omit するため, このサンプルでも null とし,
+  # base_length + mention_length の経路で constraints.jinja が動作することを確認できる.
   talk:
     max_count:
       per_agent: 4
       per_day: 20
     max_length:
       count_in_word: false
-      count_spaces: true
-      per_talk: 150
-      mention_length: null
+      count_spaces: false
+      per_talk: null
+      mention_length: 50
       per_agent: null
-      base_length: null
-    max_skip: 3
+      base_length: 50
+    max_skip: 0
   whisper:
     max_count:
-      per_agent: 4
-      per_day: 20
+      per_agent: 0
+      per_day: 0
     max_length:
       count_in_word: false
-      count_spaces: true
-      per_talk: 100
-      mention_length: null
+      count_spaces: false
+      per_talk: null
+      mention_length: 50
       per_agent: null
-      base_length: null
-    max_skip: 3
+      base_length: 50
+    max_skip: 0
   vote:
     max_count: 1
     allow_self_vote: false

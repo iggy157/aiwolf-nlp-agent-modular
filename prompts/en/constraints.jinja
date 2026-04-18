@@ -1,20 +1,48 @@
 {#-
   constraints.jinja (English)
-  Output format + length caps (read dynamically from server `setting`).
-  Expects: request_key, setting (optional)
-  setting follows aiwolf_nlp_common.packet.Setting:
-    - setting.talk.max_length.per_talk / per_agent / base_length
-    - setting.whisper.max_length.per_talk / per_agent / base_length
+  Output format (per request_key) + dynamic length caps from server setting / info.
+  Expects: request_key, setting?, info?
+
+  Server length-cap model (aiwolf-nlp-server):
+    - per_talk:       Absolute cap per utterance (omitted from the packet when set to -1 → None)
+    - base_length:    Base allowance per utterance (does not consume the per_agent budget)
+    - mention_length: Extra characters allowed *only* when the utterance @-mentions another agent
+    - per_agent:      Per-agent daily cap (remaining shown via info.remain_length)
+  Falls back to base_length + mention_length when per_talk is absent.
 -#}
 {% if request_key == 'talk' -%}
-{% if setting is not none and setting.talk is not none and setting.talk.max_length is not none and setting.talk.max_length.per_talk is not none -%}
-Keep each utterance within {{ setting.talk.max_length.per_talk }} characters.
+{%- set ml = (setting.talk.max_length if setting is not none and setting.talk is not none and setting.talk.max_length is not none else none) -%}
+{% if ml is not none and ml.per_talk is not none -%}
+Keep each utterance within {{ ml.per_talk }} characters.
+{% if ml.mention_length is not none and ml.mention_length > 0 -%}
+If you @-mention another agent (e.g. `@Agent[01]`), you may extend your utterance by up to {{ ml.mention_length }} additional characters.
+{% endif -%}
+{% elif ml is not none and ml.base_length is not none -%}
+Keep each utterance within {{ ml.base_length }} characters.
+{% if ml.mention_length is not none and ml.mention_length > 0 -%}
+If you @-mention another agent (e.g. `@Agent[01]`), you may use up to {{ ml.mention_length }} additional characters (max {{ ml.base_length + ml.mention_length }} total).
+{% endif -%}
+{% endif -%}
+{% if info is not none and info.remain_length is not none -%}
+Remaining utterance budget for today: {{ info.remain_length }} characters.
 {% endif -%}
 Output only the utterance. Do not include explanations, meta commentary, or preambles.
 If you have nothing more to say, output "Over".
 {% elif request_key == 'whisper' -%}
-{% if setting is not none and setting.whisper is not none and setting.whisper.max_length is not none and setting.whisper.max_length.per_talk is not none -%}
-Keep each whisper within {{ setting.whisper.max_length.per_talk }} characters.
+{%- set ml = (setting.whisper.max_length if setting is not none and setting.whisper is not none and setting.whisper.max_length is not none else none) -%}
+{% if ml is not none and ml.per_talk is not none -%}
+Keep each whisper within {{ ml.per_talk }} characters.
+{% if ml.mention_length is not none and ml.mention_length > 0 -%}
+If you @-mention another agent (e.g. `@Agent[01]`), you may extend your whisper by up to {{ ml.mention_length }} additional characters.
+{% endif -%}
+{% elif ml is not none and ml.base_length is not none -%}
+Keep each whisper within {{ ml.base_length }} characters.
+{% if ml.mention_length is not none and ml.mention_length > 0 -%}
+If you @-mention another agent (e.g. `@Agent[01]`), you may use up to {{ ml.mention_length }} additional characters (max {{ ml.base_length + ml.mention_length }} total).
+{% endif -%}
+{% endif -%}
+{% if info is not none and info.remain_length is not none -%}
+Remaining whisper budget for today: {{ info.remain_length }} characters.
 {% endif -%}
 Output only the whisper content. Do not include explanations, meta commentary, or preambles.
 If you have nothing more to say, output "Over".

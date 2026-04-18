@@ -1,20 +1,49 @@
 {#-
   constraints.jinja
-  文字数制限 (サーバの setting から動的に取得) と出力形式 (request_keyに応じて) を表示.
-  Expects: request_key, setting (optional)
-  setting は aiwolf_nlp_common.packet.Setting を想定:
-    - setting.talk.max_length.per_talk / per_agent / base_length
-    - setting.whisper.max_length.per_talk / per_agent / base_length
+  出力形式 (request_key 別) と文字数制限 (サーバ setting / info から動的取得) を表示.
+  Expects: request_key, setting?, info?
+
+  サーバの文字数制限モデル (aiwolf-nlp-server):
+    - per_talk:       1発言あたりの絶対上限 (値が -1 のとき packet から omit される → None)
+    - base_length:    1発言あたりの基本枠 (per_agent 予算を消費しない下限)
+    - mention_length: 他エージェントへの @メンションを含む場合のみ追加で使える文字数
+    - per_agent:      1日の1エージェントあたりの上限 (残量は info.remain_length で届く)
+  per_talk が設定されていない運用 (base + mention 方式) に対応するため, per_talk が
+  無い場合は base_length を主軸に, mention_length があれば追加枠を提示する.
 -#}
 {% if request_key == 'talk' -%}
-{% if setting is not none and setting.talk is not none and setting.talk.max_length is not none and setting.talk.max_length.per_talk is not none -%}
-1発言あたり最大 {{ setting.talk.max_length.per_talk }} 文字以内で出力してください。
+{%- set ml = (setting.talk.max_length if setting is not none and setting.talk is not none and setting.talk.max_length is not none else none) -%}
+{% if ml is not none and ml.per_talk is not none -%}
+1発言あたり最大 {{ ml.per_talk }} 文字以内で出力してください。
+{% if ml.mention_length is not none and ml.mention_length > 0 -%}
+ただし他エージェントへの @メンション (例: `@Agent[01]`) を含む場合に限り, さらに {{ ml.mention_length }} 文字まで延長できます。
+{% endif -%}
+{% elif ml is not none and ml.base_length is not none -%}
+1発言あたり {{ ml.base_length }} 文字以内で出力してください。
+{% if ml.mention_length is not none and ml.mention_length > 0 -%}
+ただし他エージェントへの @メンション (例: `@Agent[01]`) を含める場合に限り, 追加で {{ ml.mention_length }} 文字まで書けます (合計最大 {{ ml.base_length + ml.mention_length }} 文字)。
+{% endif -%}
+{% endif -%}
+{% if info is not none and info.remain_length is not none -%}
+本日の残り発言可能文字数は {{ info.remain_length }} 文字です。
 {% endif -%}
 発言内容のみを出力してください。説明やメタ情報、前置きは含めないでください。
 これ以上発言することがない場合は「Over」と出力してください。
 {% elif request_key == 'whisper' -%}
-{% if setting is not none and setting.whisper is not none and setting.whisper.max_length is not none and setting.whisper.max_length.per_talk is not none -%}
-1発言あたり最大 {{ setting.whisper.max_length.per_talk }} 文字以内で出力してください。
+{%- set ml = (setting.whisper.max_length if setting is not none and setting.whisper is not none and setting.whisper.max_length is not none else none) -%}
+{% if ml is not none and ml.per_talk is not none -%}
+1囁きあたり最大 {{ ml.per_talk }} 文字以内で出力してください。
+{% if ml.mention_length is not none and ml.mention_length > 0 -%}
+ただし他エージェントへの @メンション (例: `@Agent[01]`) を含む場合に限り, さらに {{ ml.mention_length }} 文字まで延長できます。
+{% endif -%}
+{% elif ml is not none and ml.base_length is not none -%}
+1囁きあたり {{ ml.base_length }} 文字以内で出力してください。
+{% if ml.mention_length is not none and ml.mention_length > 0 -%}
+ただし他エージェントへの @メンション (例: `@Agent[01]`) を含める場合に限り, 追加で {{ ml.mention_length }} 文字まで書けます (合計最大 {{ ml.base_length + ml.mention_length }} 文字)。
+{% endif -%}
+{% endif -%}
+{% if info is not none and info.remain_length is not none -%}
+本日の残り囁き可能文字数は {{ info.remain_length }} 文字です。
 {% endif -%}
 囁き内容のみを出力してください。説明やメタ情報、前置きは含めないでください。
 これ以上囁くことがない場合は「Over」と出力してください。
