@@ -632,14 +632,14 @@ class Agent:
                     ),
                     meta,
                 )
-            case "claude":
+            case "anthropic":
                 return (
                     ChatAnthropic(
                         model_name=model_id,
                         temperature=float(section["temperature"]),
                         timeout=None,
                         stop=None,
-                        api_key=SecretStr(os.environ["CLAUDE_API_KEY"]),
+                        api_key=SecretStr(os.environ["ANTHROPIC_API_KEY"]),
                     ),
                     meta,
                 )

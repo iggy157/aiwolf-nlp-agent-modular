@@ -13,7 +13,7 @@ llm:
   talk:
     type: google
   action:
-    type: claude
+    type: anthropic
 
 openai:
   model: gpt-4o-mini
@@ -32,7 +32,7 @@ ollama:
   temperature: 0.7
   base_url: http://localhost:11434
 
-claude:
+anthropic:
   model: claude-opus-4-5-20251101
   temperature: 1.0
 

@@ -42,7 +42,7 @@ cp config/config.single_turn.jp.yml.example  config/config.single_turn.jp.yml
 uv sync
 ```
 
-`config/.env` に API キー（`OPENAI_API_KEY` / `GOOGLE_API_KEY` / `CLAUDE_API_KEY` のうち使うもの）を設定後、実行:
+`config/.env` に API キー（`OPENAI_API_KEY` / `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` のうち使うもの）を設定後、実行:
 
 ```bash
 # エージェントを起動 (既定で ./config/config.main.jp.yml を読み, モードに応じて子configを自動マージ)
@@ -102,7 +102,7 @@ llm:
   talk:
     type: google             # talk / whisper はこちら
   action:
-    type: claude             # vote / divine / guard / attack はこちら
+    type: anthropic          # vote / divine / guard / attack はこちら
 ```
 
 - **共通リクエスト** (`initialize` / `daily_initialize` / `daily_finish`) は両方のモデルに送信され、両系統の履歴に情報共有される

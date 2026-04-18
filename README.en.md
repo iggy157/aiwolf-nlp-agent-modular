@@ -42,7 +42,7 @@ cp config/config.single_turn.en.yml.example  config/config.single_turn.en.yml
 uv sync
 ```
 
-After setting API keys (`OPENAI_API_KEY` / `GOOGLE_API_KEY` / `CLAUDE_API_KEY`, whichever you use) in `config/.env`, run:
+After setting API keys (`OPENAI_API_KEY` / `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY`, whichever you use) in `config/.env`, run:
 
 ```bash
 # Launch agents (defaults to ./config/config.main.jp.yml; the matching child config is auto-merged based on `mode`)
@@ -102,7 +102,7 @@ llm:
   talk:
     type: google             # used for talk / whisper
   action:
-    type: claude             # used for vote / divine / guard / attack
+    type: anthropic          # used for vote / divine / guard / attack
 ```
 
 - **Shared requests** (`initialize` / `daily_initialize` / `daily_finish`) are sent to both models so both histories stay in sync.

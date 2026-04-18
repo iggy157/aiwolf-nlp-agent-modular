@@ -1,6 +1,6 @@
 # Available Models
 
-- Generated: 2026-04-18T03:49:40
+- Generated: 2026-04-18T22:59:27
 - Source: `data/model_cost/*.csv` (text-chat models only)
 
 このファイルは `scripts/generate_models_md.py` によって自動生成される参考資料です. 
@@ -14,7 +14,7 @@ config ファイル (`config.multi_turn.*.yml` / `config.single_turn.*.yml`) で
 | `openai` | OpenAI | `OPENAI_API_KEY` required |
 | `google` | Google | `GOOGLE_API_KEY` required (Gemini API) |
 | `vertexai` | Google | Uses Google Cloud ADC (`gcloud auth application-default login`); shares Google pricing |
-| `claude` | Anthropic | `CLAUDE_API_KEY` required (not `ANTHROPIC_API_KEY`) |
+| `anthropic` | Anthropic | `ANTHROPIC_API_KEY` required |
 | `ollama` | (local) | No cost. Any model available on the local Ollama server |
 
 `<provider>.pricing_mode` を config で明示すると `standard` 以外の料金モード (batch など) を使える. 
@@ -39,7 +39,7 @@ config ファイル (`config.multi_turn.*.yml` / `config.single_turn.*.yml`) で
 
 ## Anthropic
 
-`llm.type: claude` — `standard` 列を既定で使用. `claude.pricing_mode: batch` で batch 料金に切替可能.
+`llm.type: anthropic` — `standard` 列を既定で使用. `anthropic.pricing_mode: batch` で batch 料金に切替可能.
 
 | Model ID | Status | Family | Input ($/M) | Cache Read | Cache Write 5m | Cache Write 1h | Output ($/M) | Batch In | Batch Out | Thinking | Notes |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|

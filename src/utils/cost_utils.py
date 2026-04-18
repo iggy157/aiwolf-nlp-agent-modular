@@ -25,7 +25,6 @@ _PROVIDER_ALIAS: dict[str, str] = {
     "openai": "OpenAI",
     "google": "Google",
     "vertexai": "Google",
-    "claude": "Anthropic",
     "anthropic": "Anthropic",
 }
 _FREE_PROVIDERS: set[str] = {"ollama"}
